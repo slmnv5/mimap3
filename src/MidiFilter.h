@@ -12,6 +12,8 @@ using namespace std;
 
 class MidiTranslator {
 public:
+	virtual ~MidiTranslator() {
+	}
 	virtual bool translate(snd_seq_event_t* event) = 0;
 };
 

@@ -11,8 +11,8 @@ public:
 	RuleMapper() {
 	}
 
-	void parseRuleString(const string& str);
-	void parseFileStream(const string& fileName);
+	void parseRuleString(const string&);
+	void parseFileStream(const string&);
 	bool checkRules(TripleVal&, char&) const;
 	size_t getSize() const {
 		return rules.size();

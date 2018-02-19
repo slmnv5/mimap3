@@ -22,6 +22,7 @@ public:
 	AlsaMapper(RuleMapper& rules) :
 			rmp(rules) {
 	}
+	virtual ~AlsaMapper() {}
 	virtual bool translate(snd_seq_event_t* event);
 
 };

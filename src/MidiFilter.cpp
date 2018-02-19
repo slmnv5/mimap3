@@ -42,7 +42,7 @@ void MidiFilter::process_events() {
 		snd_seq_ev_set_subs(event);
 		snd_seq_ev_set_direct(event);
 		snd_seq_ev_set_source(event, outport);
-		snd_seq_event_output(seq_handle, event);
+		snd_seq_event_output_direct(seq_handle, event);
 		snd_seq_free_event(event);
 
 	}
