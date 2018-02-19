@@ -6,7 +6,7 @@
 using namespace std;
 
 bool AlsaMapper::translate(snd_seq_event_t* event) {
-	char tp = NOTYPE;
+	char tp = MidiValue::NOTYPE;
 	TripleVal val;
 
 	readMidiEvent(event, val, tp);
@@ -25,14 +25,14 @@ void AlsaMapper::writeMidiEvent(snd_seq_event_t* event, const TripleVal& val,
 	event->data.note.velocity = val.v2;
 
 	switch (tp) {
-	case 'n':
+	case MidiValue::NOTEON:
 		event->type = SND_SEQ_EVENT_NOTEON;
 		break;
-	case 'p':
+	case MidiValue::PROGCHANGE:
 		event->type = SND_SEQ_EVENT_PGMCHANGE;
 		break;
-	case 'c':
-	case SND_SEQ_EVENT_CONTROLLER:
+	case MidiValue::CONTROLCHANGE:
+		event->type = SND_SEQ_EVENT_CONTROLLER;
 		break;
 	default:
 		break;
@@ -45,11 +45,17 @@ void AlsaMapper::readMidiEvent(snd_seq_event_t* event, TripleVal& val,
 	switch (event->type) {
 // snd_seq_ev_note
 
+	case SND_SEQ_EVENT_NOTEOFF:
+		tp = MidiValue::NOTEOFF;
+		val.ch = event->data.note.channel;
+		val.v1 = event->data.note.note;
+		val.v2 = event->data.note.velocity;
+		break;
+
 	case SND_SEQ_EVENT_NOTE:
 	case SND_SEQ_EVENT_NOTEON:
-	case SND_SEQ_EVENT_NOTEOFF:
 	case SND_SEQ_EVENT_KEYPRESS:
-		tp = NOTE;
+		tp = MidiValue::NOTEON;
 		val.ch = event->data.note.channel;
 		val.v1 = event->data.note.note;
 		val.v2 = event->data.note.velocity;
@@ -57,10 +63,10 @@ void AlsaMapper::readMidiEvent(snd_seq_event_t* event, TripleVal& val,
 
 // snd_seq_ev_ctrl
 	case SND_SEQ_EVENT_PGMCHANGE:
-		tp = PROGCHANGE;
+		tp = MidiValue::PROGCHANGE;
 		val.ch = event->data.control.channel;
 		val.v1 = event->data.control.value;
-		val.v2 = MISSING;
+		val.v2 = MidiValue::MISSINGVAL;
 		break;
 
 	case SND_SEQ_EVENT_CONTROLLER:
@@ -69,17 +75,17 @@ void AlsaMapper::readMidiEvent(snd_seq_event_t* event, TripleVal& val,
 	case SND_SEQ_EVENT_CONTROL14:
 	case SND_SEQ_EVENT_NONREGPARAM:
 	case SND_SEQ_EVENT_REGPARAM:
-		tp = CONTROLCHANGE;
+		tp = MidiValue::CONTROLCHANGE;
 		val.ch = event->data.control.channel;
 		val.v1 = event->data.control.param;
 		val.v2 = event->data.control.value;
 		break;
 // everything else
 	default:
-		tp = NOTYPE;
-		val.ch = MISSING;
-		val.v1 = MISSING;
-		val.v2 = MISSING;
+		tp = MidiValue::NOTYPE;
+		val.ch = MidiValue::MISSINGVAL;
+		val.v1 = MidiValue::MISSINGVAL;
+		val.v2 = MidiValue::MISSINGVAL;
 		break;
 	}
 }

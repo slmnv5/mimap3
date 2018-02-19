@@ -5,17 +5,21 @@
 
 using namespace std;
 
-static char const NOTYPE = ' ';
-static int const MISSING = -1;
-static int const NOTE = int('n');
-static int const CONTROLCHANGE = int('c');
-static int const PROGCHANGE = int('p');
+class MidiValue {
+public:
+	static char const NOTYPE = ' ';
+	static char const MISSINGVAL = -1;
+	static char const NOTEOFF = 'o';
+	static char const NOTEON = 'n';
+	static char const CONTROLCHANGE = 'c';
+	static char const PROGCHANGE = 'p';
+};
 
 class TripleVal {
 public:
-	int ch = MISSING; // midi channel
-	int v1 = MISSING; // midi note or cc
-	int v2 = MISSING; // midi velocity or cc value
+	int ch = MidiValue::MISSINGVAL; // midi channel
+	int v1 = MidiValue::MISSINGVAL; // midi note or cc
+	int v2 = MidiValue::MISSINGVAL; // midi velocity or cc value
 	const string toString() const {
 		stringstream ss;
 		ss << ch << "," << v1 << "," << v2 << endl;
@@ -26,8 +30,8 @@ public:
 class ValueRange {
 public:
 
-	int lower = MISSING;
-	int upper = MISSING;
+	int lower = MidiValue::MISSINGVAL;
+	int upper = MidiValue::MISSINGVAL;
 	void parseRange(const string&, bool);
 	void parseRangeOut(const string& str);
 	void parseRangeIn(const string& str);
@@ -57,7 +61,7 @@ public:
 	bool match(const TripleVal&, const char&) const;
 
 private:
-	char evtype = NOTYPE;
+	char evtype = MidiValue::NOTYPE;
 	ValueRange chan;
 	ValueRange val1;
 	ValueRange val2;
@@ -88,7 +92,7 @@ public:
 		return op;
 	}
 protected:
-	char op = NOTYPE;
+	char op = MidiValue::NOTYPE;
 	MidiEvent inEvent;
 	MidiEvent outEvent;
 

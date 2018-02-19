@@ -51,6 +51,10 @@ bool RuleMapper::checkRules(TripleVal& val, char& tp) const {
 		if (!ev.match(val, tp))
 			continue;
 
+#ifdef DEBUG
+		cout << "found match for: " << tp << val.toString() << ", rule: "
+				<< ev.toString() << endl;
+#endif
 		ev.transform(val, tp);
 		changed = true;
 		if (ev.getOperation() == '>')
