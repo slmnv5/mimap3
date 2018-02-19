@@ -6,7 +6,11 @@
 using namespace std;
 
 enum class MidiEvType
-	: char {NOTYPE = ' ', NOTEON = 'n', CONTROLCHANGE = 'c', PROGCHANGE = 'p'
+	: char {NOTYPE = ' ',
+	NOTEON = 'n',
+	CONTROLCHANGE = 'c',
+	PROGCHANGE = 'p',
+	SETFLAG = 's'
 };
 
 //=============================================================
@@ -47,7 +51,9 @@ private:
 //=============================================================
 class MidiEvent {
 public:
-
+	MidiEvent(bool isOut = false) :
+			isOutEvent(isOut) {
+	}
 	const string toString() const {
 		stringstream ss;
 		ss << "MidiEvent: " << static_cast<char>(evtype) << chan.toString()
@@ -55,7 +61,7 @@ public:
 		return ss.str();
 	}
 
-	void parseEventString(const string& str, bool isOut);
+	void parseEventString(const string& str );
 	void transform(TripleVal&, MidiEvType&) const;
 	bool match(const TripleVal&, const MidiEvType&) const;
 
@@ -65,15 +71,16 @@ public:
 	ValueRange val2;
 
 private:
-	void init(const char& tp, const string&, const string&, const string&,
-			bool);
+	void init(const char& tp, const string&, const string&, const string&);
 	bool isOutEvent;
 };
 //=============================================================
 class MidiEventDuo {
 public:
-	static char const RULETYPE1 = '>'; // rule terminate search of other rules
-	static char const RULETYPE2 = '='; // rule applied and search continues
+	static char const RULESTOP = '>'; // rule terminate search of other rules
+	static char const RULEKEEP = '='; // rule applied and search continues
+
+	MidiEventDuo():inEvent( false), outEvent(true), op(RULESTOP) {}
 	void transform(TripleVal&, MidiEvType&) const;
 	bool match(const TripleVal&, const MidiEvType&) const;
 
@@ -84,18 +91,17 @@ public:
 	}
 	void init(char opChar, const string& inStr, const string& outStr) {
 		op = opChar;
-		inEvent.parseEventString(inStr, false);
-		outEvent.parseEventString(outStr, true);
+		inEvent.parseEventString(inStr);
+		outEvent.parseEventString(outStr);
 	}
 	const char& getOperation() const {
 		return op;
 	}
 	bool isSafe() const;
 protected:
-	char op = RULETYPE1;
 	MidiEvent inEvent;
 	MidiEvent outEvent;
-
+	char op;
 };
 
 #endif //MIDIEVENT_H

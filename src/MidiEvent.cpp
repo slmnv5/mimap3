@@ -120,17 +120,16 @@ bool MidiEvent::match(const TripleVal& in, const MidiEvType& tp) const {
 }
 
 void MidiEvent::init(const char& tp, const string& chn, const string& vl1,
-		const string& vl2, bool isOut) {
-	isOutEvent = isOut;
+		const string& vl2) {
 	evtype = static_cast<MidiEvType>(tp);
 	chan.parseRange(chn, isOutEvent);
 	val1.parseRange(vl1, isOutEvent);
 	val2.parseRange(vl2, isOutEvent);
 }
 
-void MidiEvent::parseEventString(const string& str, bool isOut) {
+void MidiEvent::parseEventString(const string& str) {
 
-	static const char* regexEvent = "(n|c|p)([\\d:+-]*),([\\d:+-]*),([\\d:+-]*)";
+	static const char* regexEvent = "([ncpf])([\\d:+-]*),([\\d:+-]*),([\\d:+-]*)";
 	regex expr(regexEvent);
 	smatch sm;
 	if (!regex_match(str, sm, expr)) {
@@ -144,7 +143,7 @@ void MidiEvent::parseEventString(const string& str, bool isOut) {
 				+ str;
 	}
 
-	init(sm[1].str().at(0), sm[2], sm[3], sm[4], isOut);
+	init(sm[1].str().at(0), sm[2], sm[3], sm[4]);
 }
 
 //===================================================
@@ -154,22 +153,21 @@ bool MidiEventDuo::match(const TripleVal& in, const MidiEvType& tp) const {
 
 void MidiEventDuo::transform(TripleVal& in, MidiEvType& tp) const {
 	outEvent.transform(in, tp);
-
 }
 
 bool MidiEventDuo::isSafe() const {
 	// out channel changes - we may miss note off event
 	if (outEvent.evtype != MidiEvType::NOTEON)
-		return false;
+		return true;
 
 	if (outEvent.chan.countborders() == 0)
-		return false;
+		return true;
 
-	if (outEvent.chan.countborders() == 1 && inEvent.val1.countborders() != 0
-			&& inEvent.val2.countborders() != 0)
-		return false;
+	if (outEvent.chan.countborders() == 1 && inEvent.val1.countborders() == 0
+			&& inEvent.val2.countborders() == 0)
+		return true;
 
-	return true;
+	return false;
 
 }
 

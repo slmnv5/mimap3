@@ -15,11 +15,11 @@ int main() {
 		rmp.parseFileStream("/home/erik/psr300.map");
 		cout << rmp.toString();
 
-		AlsaMapper amp(rmp);
+		//AlsaMapper amp(rmp);
 
-		MidiFilter mf(amp);
-		mf.open_alsa_connection();
-		mf.process_events();
+		//MidiFilter mf(amp);
+		//mf.open_alsa_connection();
+		//mf.process_events();
 
 	} catch (const string& err) {
 		cerr << __func__ << err << endl;

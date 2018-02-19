@@ -9,7 +9,7 @@ void RuleMapper::parseRuleString(const string& str) {
 
 	if (str1.size() == 0)
 		return;
-	static const char* regexRule = "([ncp][\\d,:]*)(=|>)([ncp][\\d,+-]*)";
+	static const char* regexRule = "([ncpf][\\d,:]*)(=|>)([ncpf][\\d,+-]*)";
 	static regex expr(regexRule);
 	smatch sm;    // same as std::match_results<string::const_iterator> sm;
 	if (!regex_match(str1, sm, expr))
@@ -60,7 +60,7 @@ bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) const {
 #endif
 		ev.transform(val, tp);
 		changed = true;
-		if (ev.getOperation() == '>')
+		if (ev.getOperation() == MidiEventDuo::RULESTOP)
 			break;
 	}
 	return changed;
