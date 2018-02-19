@@ -6,18 +6,21 @@
 CPP_SRCS += \
 ../src/AlsaMapper.cpp \
 ../src/MidiEvent.cpp \
+../src/MidiFilter.cpp \
 ../src/RuleMapper.cpp \
 ../src/mimap3.cpp 
 
 OBJS += \
 ./src/AlsaMapper.o \
 ./src/MidiEvent.o \
+./src/MidiFilter.o \
 ./src/RuleMapper.o \
 ./src/mimap3.o 
 
 CPP_DEPS += \
 ./src/AlsaMapper.d \
 ./src/MidiEvent.d \
+./src/MidiFilter.d \
 ./src/RuleMapper.d \
 ./src/mimap3.d 
 

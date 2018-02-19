@@ -4,6 +4,7 @@
 #include "pch.h"
 #include "MidiEvent.h"
 #include "RuleMapper.h"
+#include "MidiFilter.h"
 
 using namespace std;
 
@@ -11,12 +12,8 @@ using namespace std;
 //                                 ALSA
 // =======================================================================
 
-class AlsaMapper {
+class AlsaMapper: public MidiTranslator {
 private:
-
-	int inport = 0;
-	int outport = 0;
-	snd_seq_t* sequencer = NULL;
 	void readMidiEvent(snd_seq_event_t* event, TripleVal& val, char& tp) const;
 	void writeMidiEvent(snd_seq_event_t* event, const TripleVal& val,
 			const char& tp);
@@ -24,12 +21,9 @@ private:
 public:
 	AlsaMapper(RuleMapper& rules) :
 			rmp(rules) {
-		open_alsa_connection();
-		process_events();
 	}
+	virtual bool translate(snd_seq_event_t* event);
 
-	void open_alsa_connection();
-	void process_events();
 };
 
-#endif //ALSAMAPPER_H
+#endif
