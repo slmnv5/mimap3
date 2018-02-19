@@ -14,9 +14,9 @@ using namespace std;
 
 class AlsaMapper: public MidiTranslator {
 private:
-	void readMidiEvent(snd_seq_event_t* event, TripleVal& val, char& tp) const;
+	void readMidiEvent(snd_seq_event_t* event, TripleVal& val, MidiEvType& tp) const;
 	void writeMidiEvent(snd_seq_event_t* event, const TripleVal& val,
-			const char& tp);
+			const MidiEvType& tp);
 	RuleMapper& rmp;
 public:
 	AlsaMapper(RuleMapper& rules) :

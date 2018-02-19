@@ -22,8 +22,11 @@ void RuleMapper::parseRuleString(const string& str) {
 	if (sm.size() != 4)
 		throw string(__func__) + "  Rule has incorrect elements: " + str1;
 
-	MidiEventWrap ev;
+	MidiEventDuo ev;
 	ev.init(sm[2].str().at(0), sm[1], sm[3]);
+	if (!ev.isSafe())
+		throw string(__func__) + "  Rule is unsafe! Note off event may go to other channel: " + str1;
+
 	rules.push_back(move(ev));
 }
 
@@ -44,15 +47,15 @@ void RuleMapper::parseFileStream(const string& fileName) {
 	f.close();
 }
 
-bool RuleMapper::checkRules(TripleVal& val, char& tp) const {
+bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) const {
 	bool changed = false;
 	for (size_t i = 0; i < getSize(); i++) {
-		const MidiEventWrap& ev = rules[i];
+		const MidiEventDuo& ev = rules[i];
 		if (!ev.match(val, tp))
 			continue;
 
 #ifdef DEBUG
-		cout << "found match for: " << tp << val.toString() << ", rule: "
+		cout << "found match for: " << static_cast<char>(tp) << val.toString() << ", rule: "
 				<< ev.toString() << endl;
 #endif
 		ev.transform(val, tp);

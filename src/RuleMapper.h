@@ -13,18 +13,18 @@ public:
 
 	void parseRuleString(const string&);
 	void parseFileStream(const string&);
-	bool checkRules(TripleVal&, char&) const;
+	bool checkRules(TripleVal&, MidiEvType&) const;
 	size_t getSize() const {
 		return rules.size();
 	}
 	const string toString() const;
 protected:
-	vector<MidiEventWrap>& getRules() {
+	vector<MidiEventDuo>& getRules() {
 		return rules;
 	}
 
 private:
-	vector<MidiEventWrap> rules;
+	vector<MidiEventDuo> rules;
 };
 
 #endif //RULEMAPPER_H

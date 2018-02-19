@@ -5,37 +5,34 @@
 
 using namespace std;
 
-class MidiValue {
-public:
-	static char const NOTYPE = ' ';
-	static char const MISSINGVAL = -1;
-	static char const NOTEOFF = 'o';
-	static char const NOTEON = 'n';
-	static char const CONTROLCHANGE = 'c';
-	static char const PROGCHANGE = 'p';
+enum class MidiEvType
+	: char {NOTYPE = ' ', NOTEON = 'n', CONTROLCHANGE = 'c', PROGCHANGE = 'p'
 };
+
+//=============================================================
 
 class TripleVal {
 public:
-	int ch = MidiValue::MISSINGVAL; // midi channel
-	int v1 = MidiValue::MISSINGVAL; // midi note or cc
-	int v2 = MidiValue::MISSINGVAL; // midi velocity or cc value
+	static int const MISSINGVAL = -1;
+	int ch = TripleVal::MISSINGVAL; // midi channel
+	int v1 = TripleVal::MISSINGVAL; // midi note or cc
+	int v2 = TripleVal::MISSINGVAL; // midi velocity or cc value
 	const string toString() const {
 		stringstream ss;
 		ss << ch << "," << v1 << "," << v2 << endl;
 		return ss.str();
 	}
 };
+//=============================================================
 
 class ValueRange {
 public:
-
-	int lower = MidiValue::MISSINGVAL;
-	int upper = MidiValue::MISSINGVAL;
+	int lower = TripleVal::MISSINGVAL;
+	int upper = TripleVal::MISSINGVAL;
 	void parseRange(const string&, bool);
 	void parseRangeOut(const string& str);
 	void parseRangeIn(const string& str);
-
+	int countborders() const;
 	bool match(int) const;
 	int transform(TripleVal, int) const;
 
@@ -46,42 +43,44 @@ public:
 private:
 	string description;
 };
+
+//=============================================================
 class MidiEvent {
 public:
 
 	const string toString() const {
-		string str = "MidiEvent: ";
-		str.append(&evtype, 1);
-		str += chan.toString() + "," + val1.toString() + "," + val2.toString();
-		return str;
+		stringstream ss;
+		ss << "MidiEvent: " << static_cast<char>(evtype) << chan.toString()
+				<< "," << val1.toString() << "," << val2.toString();
+		return ss.str();
 	}
 
 	void parseEventString(const string& str, bool isOut);
-	void transform(TripleVal&, char&) const;
-	bool match(const TripleVal&, const char&) const;
+	void transform(TripleVal&, MidiEvType&) const;
+	bool match(const TripleVal&, const MidiEvType&) const;
 
-private:
-	char evtype = MidiValue::NOTYPE;
+	MidiEvType evtype = MidiEvType::NOTYPE;
 	ValueRange chan;
 	ValueRange val1;
 	ValueRange val2;
 
+private:
 	void init(const char& tp, const string&, const string&, const string&,
 			bool);
 	bool isOutEvent;
 };
-
-class MidiEventWrap {
+//=============================================================
+class MidiEventDuo {
 public:
-
-	void transform(TripleVal&, char&) const;
-	bool match(const TripleVal&, const char&) const;
+	static char const RULETYPE1 = '>'; // rule terminate search of other rules
+	static char const RULETYPE2 = '='; // rule applied and search continues
+	void transform(TripleVal&, MidiEvType&) const;
+	bool match(const TripleVal&, const MidiEvType&) const;
 
 	const string toString() const {
-		string str = "Rule: " + inEvent.toString();
-		str.append(&op, 1);
-		str += outEvent.toString();
-		return str;
+		stringstream ss;
+		ss << "Rule: " << inEvent.toString() << op << outEvent.toString();
+		return ss.str();
 	}
 	void init(char opChar, const string& inStr, const string& outStr) {
 		op = opChar;
@@ -91,8 +90,9 @@ public:
 	const char& getOperation() const {
 		return op;
 	}
+	bool isSafe() const;
 protected:
-	char op = MidiValue::NOTYPE;
+	char op = RULETYPE1;
 	MidiEvent inEvent;
 	MidiEvent outEvent;
 

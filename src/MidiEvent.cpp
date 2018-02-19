@@ -55,12 +55,16 @@ void ValueRange::parseRange(const string& str, bool isOutEvent) {
 	description = str;
 }
 
-bool ValueRange::match(int val) const {
+int ValueRange::countborders() const {
 	int cnt = 2;
 	if (lower < 0)
 		cnt = 0;
 	else if (upper < 0)
 		cnt = 1;
+	return cnt;
+}
+bool ValueRange::match(int val) const {
+	int cnt = countborders();
 
 	if (cnt == 0)
 		return true;
@@ -70,11 +74,7 @@ bool ValueRange::match(int val) const {
 		return val <= upper && val >= lower;
 }
 int ValueRange::transform(TripleVal val, int dflt) const {
-	int cnt = 2;
-	if (lower < 0)
-		cnt = 0;
-	else if (upper < 0)
-		cnt = 1;
+	int cnt = countborders();
 
 	if (cnt == 0)
 		return dflt;
@@ -101,7 +101,7 @@ int ValueRange::transform(TripleVal val, int dflt) const {
 
 //========================================================
 
-void MidiEvent::transform(TripleVal& in, char& tp) const {
+void MidiEvent::transform(TripleVal& in, MidiEvType& tp) const {
 	if (!isOutEvent)
 		throw string(__func__) + "  Input event can not transform MidiMessage";
 	TripleVal newVal;
@@ -112,7 +112,7 @@ void MidiEvent::transform(TripleVal& in, char& tp) const {
 	tp = evtype;
 }
 
-bool MidiEvent::match(const TripleVal& in, const char& tp) const {
+bool MidiEvent::match(const TripleVal& in, const MidiEvType& tp) const {
 	if (isOutEvent)
 		throw string(__func__) + "  Out event can not match MidiMessage";
 	return evtype == tp && chan.match(in.ch) && val1.match(in.v1)
@@ -122,7 +122,7 @@ bool MidiEvent::match(const TripleVal& in, const char& tp) const {
 void MidiEvent::init(const char& tp, const string& chn, const string& vl1,
 		const string& vl2, bool isOut) {
 	isOutEvent = isOut;
-	evtype = tp;
+	evtype = static_cast<MidiEvType>(tp);
 	chan.parseRange(chn, isOutEvent);
 	val1.parseRange(vl1, isOutEvent);
 	val2.parseRange(vl2, isOutEvent);
@@ -148,12 +148,28 @@ void MidiEvent::parseEventString(const string& str, bool isOut) {
 }
 
 //===================================================
-bool MidiEventWrap::match(const TripleVal& in, const char& tp) const {
+bool MidiEventDuo::match(const TripleVal& in, const MidiEvType& tp) const {
 	return inEvent.match(in, tp);
 }
 
-void MidiEventWrap::transform(TripleVal& in, char& tp) const {
+void MidiEventDuo::transform(TripleVal& in, MidiEvType& tp) const {
 	outEvent.transform(in, tp);
+
+}
+
+bool MidiEventDuo::isSafe() const {
+	// out channel changes - we may miss note off event
+	if (outEvent.evtype != MidiEvType::NOTEON)
+		return false;
+
+	if (outEvent.chan.countborders() == 0)
+		return false;
+
+	if (outEvent.chan.countborders() == 1 && inEvent.val1.countborders() != 0
+			&& inEvent.val2.countborders() != 0)
+		return false;
+
+	return true;
 
 }
 
