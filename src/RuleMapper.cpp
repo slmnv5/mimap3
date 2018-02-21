@@ -9,7 +9,7 @@ void RuleMapper::parseRuleString(const string& str) {
 
 	if (str1.size() == 0)
 		return;
-	static const char* regexRule = "([ncpf][\\d,:]*)(=|>)([ncpf][\\d,+-]*)";
+	static const char* regexRule = "([ncpsa][\\d,:]*)(=|>)([ncpsa][\\d,+-]*)";
 	static regex expr(regexRule);
 	smatch sm;    // same as std::match_results<string::const_iterator> sm;
 	if (!regex_match(str1, sm, expr))
@@ -17,7 +17,7 @@ void RuleMapper::parseRuleString(const string& str) {
 
 #ifdef DEBUG
 	cout << string(__func__) << "  " << str1 << " tokens= " << sm.size()
-			<< endl;
+	<< endl;
 #endif
 	if (sm.size() != 4)
 		throw string(__func__) + "  Rule has incorrect elements: " + str1;
@@ -25,7 +25,9 @@ void RuleMapper::parseRuleString(const string& str) {
 	MidiEventDuo ev;
 	ev.init(sm[2].str().at(0), sm[1], sm[3]);
 	if (!ev.isSafe())
-		throw string(__func__) + "  Rule is unsafe! Note off event may go to other channel: " + str1;
+		throw string(__func__)
+				+ "  Rule is unsafe! Note off event may go to other channel: "
+				+ str1;
 
 	rules.push_back(move(ev));
 }
@@ -47,18 +49,45 @@ void RuleMapper::parseFileStream(const string& fileName) {
 	f.close();
 }
 
-bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) const {
+int RuleMapper::findMatch(const TripleVal& val, const MidiEvType& tp,
+		int startFrom) const {
+	for (size_t i = startFrom; i < getSize(); i++) {
+		const MidiEventDuo& ev = rules[i];
+		if (ev.match(val, tp))
+			return i;
+	}
+	return -1;
+}
+
+bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
 	bool changed = false;
-	for (size_t i = 0; i < getSize(); i++) {
+	int newFlagPosition = -1;
+	for (size_t i = flagPosition; i < getSize(); i++) {
 		const MidiEventDuo& ev = rules[i];
 		if (!ev.match(val, tp))
 			continue;
 
 #ifdef DEBUG
-		cout << "found match for: " << static_cast<char>(tp) << val.toString() << ", rule: "
-				<< ev.toString() << endl;
+		cout << "Found match for: " << static_cast<char>(tp) << val.toString() << ", rule: "
+		<< ev.toString() << endl;
 #endif
+
 		ev.transform(val, tp);
+		if (tp == MidiEvType::SETFLAG) {
+			newFlagPosition = findMatch(val, tp, 0);
+			if (newFlagPosition < 0) {
+				cerr << "No match for: " << static_cast<char>(tp)
+						<< val.toString() << ", rule: " << ev.toString()
+						<< endl;
+			} else {
+				flagPosition = newFlagPosition;
+			}
+			val.v1 = 120;
+			val.v2 = 0;
+			tp = MidiEvType::CONTROLCHANGE; // all notes off
+			return true;
+		}
+
 		changed = true;
 		if (ev.getOperation() == MidiEventDuo::RULESTOP)
 			break;

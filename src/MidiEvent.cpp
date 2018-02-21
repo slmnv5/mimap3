@@ -115,7 +115,7 @@ void MidiEvent::transform(TripleVal& in, MidiEvType& tp) const {
 bool MidiEvent::match(const TripleVal& in, const MidiEvType& tp) const {
 	if (isOutEvent)
 		throw string(__func__) + "  Out event can not match MidiMessage";
-	return evtype == tp && chan.match(in.ch) && val1.match(in.v1)
+	return (evtype == tp || evtype == MidiEvType::NOTYPE) && chan.match(in.ch) && val1.match(in.v1)
 			&& val2.match(in.v2);
 }
 
@@ -129,7 +129,7 @@ void MidiEvent::init(const char& tp, const string& chn, const string& vl1,
 
 void MidiEvent::parseEventString(const string& str) {
 
-	static const char* regexEvent = "([ncpf])([\\d:+-]*),([\\d:+-]*),([\\d:+-]*)";
+	static const char* regexEvent = "([ncpsa])([\\d:+-]*),([\\d:+-]*),([\\d:+-]*)";
 	regex expr(regexEvent);
 	smatch sm;
 	if (!regex_match(str, sm, expr)) {

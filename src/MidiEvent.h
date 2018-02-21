@@ -6,7 +6,7 @@
 using namespace std;
 
 enum class MidiEvType
-	: char {NOTYPE = ' ',
+	: char {NOTYPE = 'a',
 	NOTEON = 'n',
 	CONTROLCHANGE = 'c',
 	PROGCHANGE = 'p',

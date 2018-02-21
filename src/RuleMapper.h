@@ -13,17 +13,22 @@ public:
 
 	void parseRuleString(const string&);
 	void parseFileStream(const string&);
-	bool checkRules(TripleVal&, MidiEvType&) const;
+	int findMatch(const TripleVal&, const MidiEvType&, int) const;
+	bool checkRules(TripleVal&, MidiEvType&);
 	size_t getSize() const {
 		return rules.size();
 	}
 	const string toString() const;
 protected:
+
 	vector<MidiEventDuo>& getRules() {
 		return rules;
 	}
-
 private:
+	TripleVal flagVal;
+	MidiEvType flagType = MidiEvType::NOTYPE;
+	int flagPosition = 0;
+
 	vector<MidiEventDuo> rules;
 };
 
