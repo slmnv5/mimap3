@@ -25,8 +25,6 @@ protected:
 		return rules;
 	}
 private:
-	TripleVal flagVal;
-	MidiEvType flagType = MidiEvType::NOTYPE;
 	int flagPosition = 0;
 
 	vector<MidiEventDuo> rules;
