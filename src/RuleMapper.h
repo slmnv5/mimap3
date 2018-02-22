@@ -10,8 +10,6 @@ class RuleMapper {
 public:
 	RuleMapper() {
 	}
-
-	void parseRuleString(const string&);
 	void parseFileStream(const string&);
 	int findMatch(const TripleVal&, const MidiEvType&, int) const;
 	bool checkRules(TripleVal&, MidiEvType&);
@@ -26,8 +24,10 @@ protected:
 	}
 private:
 	int flagPosition = 0;
-
 	vector<MidiEventDuo> rules;
+
+	void preProcessString(string&) const ;
+	void parseRuleString(string&);
 };
 
 #endif //RULEMAPPER_H

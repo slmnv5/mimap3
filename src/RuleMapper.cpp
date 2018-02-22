@@ -3,31 +3,38 @@
 
 using namespace std;
 
-void RuleMapper::parseRuleString(const string& str) {
-	string str1 = str.substr(0, str.find(";"));
-	str1 = regex_replace(str1, regex("\\s+"), string(""));
+void RuleMapper::preProcessString(string& str) const {
+	str = str.substr(0, str.find(";"));
+	str = regex_replace(str, regex("\\s+"), string(""));
+	str = regex_replace(str, regex("exit.*", regex_constants::icase),
+			string("a,,>c,120,0"));
+	str = regex_replace(str, regex("enter(=|>)*(.*)", regex_constants::icase),
+			string("$2=c,120,0"));
+}
 
-	if (str1.size() == 0)
+void RuleMapper::parseRuleString(string& str) {
+	preProcessString(str);
+
+	if (str.size() == 0)
 		return;
 	static const char* regexRule = "([ncpsa][\\d,:]*)(=|>)([ncpsa][\\d,+-]*)";
 	static regex expr(regexRule);
 	smatch sm;    // same as std::match_results<string::const_iterator> sm;
-	if (!regex_match(str1, sm, expr))
-		throw string(__func__) + "  Rule has incorrect format: " + str1;
+	if (!regex_match(str, sm, expr))
+		throw string(__func__) + "  Rule has incorrect format: " + str;
 
 #ifdef DEBUG
-	cout << string(__func__) << "  " << str1 << " tokens= " << sm.size()
+	cout << string(__func__) << "  " << str << " tokens= " << sm.size()
 	<< endl;
 #endif
 	if (sm.size() != 4)
-		throw string(__func__) + "  Rule has incorrect elements: " + str1;
+		throw string(__func__) + "  Rule has incorrect elements: " + str;
 
 	MidiEventDuo ev;
 	ev.init(sm[2].str().at(0), sm[1], sm[3]);
 	if (!ev.isSafe())
 		throw string(__func__)
-				+ "  Rule is unsafe! Note off event may go to other channel: "
-				+ str1;
+				+ "  Rule is unsafe! Note off event may get lost: " + str;
 
 	rules.push_back(move(ev));
 }

@@ -56,7 +56,7 @@ public:
 	}
 	const string toString() const {
 		stringstream ss;
-		ss << "MidiEvent: " << static_cast<char>(evtype) << chan.toString()
+		ss << static_cast<char>(evtype) << chan.toString()
 				<< "," << val1.toString() << "," << val2.toString();
 		return ss.str();
 	}
