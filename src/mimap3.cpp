@@ -8,7 +8,7 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-	if (argc < 2) {
+	if (argc < 1) {
 		cout << "Usage is ";
 		cin.get();
 		exit(0);
@@ -41,9 +41,9 @@ int main(int argc, char* argv[]) {
 		//mf.process_events();
 
 	} catch (const string& err) {
-		cerr << __func__ << err << endl;
+		cout << __func__ << err << endl;
 	} catch (...) {
-		cerr << __func__ << "  Unexpected error!" << endl;
+		cout << __func__ << "  Unexpected error!" << endl;
 	}
 	cout << "done" << endl;
 

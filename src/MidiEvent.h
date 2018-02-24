@@ -11,7 +11,8 @@ void splitString(string line, const string& Delimiter, vector<string>& tokens);
 void replaceAll(string line, const string& del, const string& repl);
 
 enum class MidiEvType
-	: char {NOTYPE = 'a',
+	: char {NONE = 'x',
+	ANY = 'a',
 	NOTEON = 'n',
 	CONTROLCHANGE = 'c',
 	PROGCHANGE = 'p',
@@ -22,10 +23,12 @@ enum class MidiEvType
 
 class TripleVal {
 public:
-	static int const MISSINGVAL = -1;
-	int ch = TripleVal::MISSINGVAL; // midi channel
-	int v1 = TripleVal::MISSINGVAL; // midi note or cc
-	int v2 = TripleVal::MISSINGVAL; // midi velocity or cc value
+	static char const NONE = -1;
+	static char const ZERO = 0;
+
+	char ch = NONE; // midi channel
+	char v1 = NONE; // midi note or cc
+	char v2 = ZERO; // midi velocity or cc value
 	const string toString() const {
 		stringstream ss;
 		ss << ch << "," << v1 << "," << v2 << endl;
@@ -36,8 +39,8 @@ public:
 
 class ValueRange {
 public:
-	int lower = TripleVal::MISSINGVAL;
-	int upper = TripleVal::MISSINGVAL;
+	int lower = TripleVal::NONE;
+	int upper = TripleVal::ZERO;
 	void init(const string&, const string&);
 	int countborders() const;
 	bool match(int) const;
@@ -48,6 +51,7 @@ public:
 	}
 
 private:
+	int convertToInt(const string&);
 	string description;
 };
 
@@ -59,7 +63,7 @@ public:
 	}
 	const string toString() const {
 		stringstream ss;
-		ss << static_cast<char>(evtype) << chan.toString() << ","
+		ss << static_cast<char>(evtype) << "," << chan.toString() << ","
 				<< val1.toString() << "," << val2.toString();
 		return ss.str();
 	}
@@ -68,8 +72,7 @@ public:
 	void transform(TripleVal&, MidiEvType&) const;
 	bool match(const TripleVal&, const MidiEvType&) const;
 
-
-	MidiEvType evtype = MidiEvType::NOTYPE;
+	MidiEvType evtype = MidiEvType::NONE;
 	ValueRange chan;
 	ValueRange val1;
 	ValueRange val2;
@@ -81,7 +84,7 @@ private:
 //=============================================================
 class MidiEventDuo {
 public:
-	static char const RULEKEEP = '='; // rule applied and search continues
+	static char const RULEDELIM = '='; // rule applied and search continues
 
 	MidiEventDuo() :
 			inEvent(false), outEvent(true) {
@@ -91,7 +94,7 @@ public:
 
 	const string toString() const {
 		stringstream ss;
-		ss << "Rule: " << inEvent.toString() << outEvent.toString();
+		ss << "Rule: " << inEvent.toString() << "=" << outEvent.toString();
 		return ss.str();
 	}
 	void init(vector<string> part1, vector<string> part2) {

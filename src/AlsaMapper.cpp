@@ -6,7 +6,7 @@
 using namespace std;
 
 bool AlsaMapper::translate(snd_seq_event_t* event) {
-	MidiEvType tp = MidiEvType::NOTYPE;
+	MidiEvType tp = MidiEvType::NONE;
 	TripleVal val;
 
 	readMidiEvent(event, val, tp);
@@ -60,7 +60,7 @@ void AlsaMapper::readMidiEvent(snd_seq_event_t* event, TripleVal& val,
 		tp = MidiEvType::PROGCHANGE;
 		val.ch = event->data.control.channel;
 		val.v1 = event->data.control.value;
-		val.v2 = TripleVal::MISSINGVAL;
+		val.v2 = TripleVal::NONE;
 		break;
 
 	case SND_SEQ_EVENT_CONTROLLER:
@@ -76,10 +76,10 @@ void AlsaMapper::readMidiEvent(snd_seq_event_t* event, TripleVal& val,
 		break;
 // everything else
 	default:
-		tp = MidiEvType::NOTYPE;
-		val.ch = TripleVal::MISSINGVAL;
-		val.v1 = TripleVal::MISSINGVAL;
-		val.v2 = TripleVal::MISSINGVAL;
+		tp = MidiEvType::NONE;
+		val.ch = TripleVal::NONE;
+		val.v1 = TripleVal::NONE;
+		val.v2 = TripleVal::NONE;
 		break;
 	}
 }

@@ -19,7 +19,7 @@ void RuleMapper::parseRuleString(string& str) {
 		return;
 	vector<string> twoParts;
 	splitString(str, "=", twoParts);
-	if (!twoParts.size() != 2) {
+	if (twoParts.size() != 2) {
 		throw string(__func__) + "  Rule must have 2 parts separated by '=': "
 				+ str;
 	}
@@ -54,9 +54,9 @@ void RuleMapper::parseFileStream(const string& fileName) {
 		try {
 			parseRuleString(str);
 		} catch (const string& err) {
-			cerr << string(__func__) << "  Error in rule: " << err << endl;
+			cout << string(__func__) << "  Error in rule: " << err << endl;
 		} catch (...) {
-			cerr << string(__func__) << "  Unexpected error!" << endl;
+			cout << string(__func__) << "  Unexpected error!" << endl;
 		}
 	}
 	f.close();
@@ -89,7 +89,7 @@ bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
 		if (tp == MidiEvType::SETFLAG) {
 			newFlagPosition = findMatch(val, tp, 0);
 			if (newFlagPosition < 0) {
-				cerr << "No match for: " << static_cast<char>(tp)
+				cout << "No match for: " << static_cast<char>(tp)
 						<< val.toString() << ", rule: " << ev.toString()
 						<< "\nReset starting flag to zero" << endl;
 			} else {
