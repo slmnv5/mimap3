@@ -24,8 +24,7 @@ void RuleMapper::parseRuleString(string& str) {
 		throw string(__func__) + "  Rule has incorrect format: " + str;
 
 #ifdef DEBUG
-	cout << string(__func__) << "  " << str << " tokens= " << sm.size()
-	<< endl;
+	cout << string(__func__) << "  " << str << " tokens= " << sm.size() << endl;
 #endif
 	if (sm.size() != 4)
 		throw string(__func__) + "  Rule has incorrect elements: " + str;
@@ -75,8 +74,8 @@ bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
 			continue;
 
 #ifdef DEBUG
-		cout << "Found match for: " << static_cast<char>(tp) << val.toString() << ", rule: "
-		<< ev.toString() << endl;
+		cout << "Found match for: " << static_cast<char>(tp) << val.toString()
+				<< ", rule: " << ev.toString() << endl;
 #endif
 
 		ev.transform(val, tp);
@@ -85,9 +84,10 @@ bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
 			if (newFlagPosition < 0) {
 				cerr << "No match for: " << static_cast<char>(tp)
 						<< val.toString() << ", rule: " << ev.toString()
-						<< endl;
+						<< "\nReset starting flag to zero" << endl;
 			} else {
 				flagPosition = newFlagPosition;
+				cout << "Reset starting flag to " << flagPosition << endl;
 			}
 			val.v1 = 120;
 			val.v2 = 0;
