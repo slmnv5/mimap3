@@ -3,56 +3,47 @@
 
 using namespace std;
 
-void ValueRange::parseRangeIn(const string& str) {
-	static string regexRange = "^(\\d{0,3})?(?:(\\:)(\\d{1,3}))?";
-	static regex expr(regexRange);
-	smatch sm;
-	if (!regex_match(str, sm, expr))
+//==================== utility functions ===================================
+void splitString(string line, const string& delimiter, vector<string>& tokens) {
+	size_t pos = 0;
+	string token;
+	while ((pos = line.find(delimiter)) != std::string::npos) {
+		token = line.substr(0, pos);
+		tokens.push_back(token);
+		line.erase(0, pos + delimiter.length());
+	}
+}
+
+void replaceAll(string line, const string& del, const string& repl) {
+	string::size_type n = 0;
+	while ((n = line.find(del, n)) != string::npos) {
+		line.replace(n, del.size(), repl);
+		n += repl.size();
+	}
+}
+
+void ValueRange::init(const string& str, const string& delim) {
+	description = str;
+	vector<string> twoParts;
+	splitString(str, delim, twoParts);
+
+	if (twoParts.size() > 2)
 		throw string(string(__func__)) + "  Input string has incorrect format: "
 				+ str;
-
-	if (sm.size() != 4)
-		throw string(__func__) + "  Input string has incorrect elements: "
-				+ str;
-
-	if (sm[1].str().size() > 0)
-		lower = stoi(sm[1]);
-	if (sm[3].str().size() > 0)
-		upper = stoi(sm[3]);
-
+	try {
+		if (twoParts.size() == 2) {
+			lower = stoi(twoParts[0]);
+			upper = stoi(twoParts[1]);
+		} else if (twoParts.size() == 1) {
+			lower = stoi(twoParts[0]);
+		}
+	} catch (...) {
+		throw string(__func__) + "  Could not parse integer values: " + str;
+	}
 	if (upper >= 0 && lower >= upper)
 		throw string(__func__) + "  Lower value must be less than upper value: "
 				+ str;
 
-}
-void ValueRange::parseRangeOut(const string& str) {
-	static string regexRange = "^(\\d{0,3})?(?:(\\+|-)(\\d{1,3}))?";
-	static regex expr(regexRange);
-	smatch sm;
-	if (!regex_match(str, sm, expr))
-		throw string(string(__func__)) + "  Range has incorrect format: " + str;
-	if (sm.size() != 4)
-		throw string(__func__) + "  Range has incorrect elements: " + str;
-
-	if (sm[1].str().size() > 0)
-		lower = stoi(sm[1]);
-	if (sm[3].str().size() > 0) {
-		upper = stoi(sm[3]);
-		if (lower < 1 || lower > 3)
-			throw string(__func__) + "  Output range has incorrect format: "
-					+ str;
-		if (sm[2] == "+")
-			lower = lower + 10;
-	}
-
-}
-void ValueRange::parseRange(const string& str, bool isOutEvent) {
-	if (isOutEvent)
-		parseRangeOut(str);
-	else
-		parseRangeIn(str);
-
-	description = str;
 }
 
 int ValueRange::countborders() const {
@@ -115,35 +106,20 @@ void MidiEvent::transform(TripleVal& in, MidiEvType& tp) const {
 bool MidiEvent::match(const TripleVal& in, const MidiEvType& tp) const {
 	if (isOutEvent)
 		throw string(__func__) + "  Out event can not match MidiMessage";
-	return (evtype == tp || evtype == MidiEvType::NOTYPE) && chan.match(in.ch) && val1.match(in.v1)
-			&& val2.match(in.v2);
+	return (evtype == tp || evtype == MidiEvType::NOTYPE) && chan.match(in.ch)
+			&& val1.match(in.v1) && val2.match(in.v2);
 }
 
-void MidiEvent::init(const char& tp, const string& chn, const string& vl1,
-		const string& vl2) {
-	evtype = static_cast<MidiEvType>(tp);
-	chan.parseRange(chn, isOutEvent);
-	val1.parseRange(vl1, isOutEvent);
-	val2.parseRange(vl2, isOutEvent);
-}
+void MidiEvent::init(const vector<string>& vect, bool isOut) {
+	this->isOutEvent = isOut;
+	if (vect.size() != 4)
+		throw string(__func__) + "  Event vector must have 4 parts";
 
-void MidiEvent::parseEventString(const string& str) {
-
-	static const char* regexEvent = "([ncpsa])([\\d:+-]*),([\\d:+-]*),([\\d:+-]*)";
-	regex expr(regexEvent);
-	smatch sm;
-	if (!regex_match(str, sm, expr)) {
-		throw string(__func__) + "  Event string has incorrect format: " + str;
-	}
-#ifdef DEBUG
-	cout << string(__func__) << "  " << str << " tokens= " << sm.size() << endl;
-#endif
-	if (sm.size() != 5) {
-		throw string(__func__) + "  Event string has incorrect elements: "
-				+ str;
-	}
-
-	init(sm[1].str().at(0), sm[2], sm[3], sm[4]);
+	evtype = static_cast<MidiEvType>(vect[0].at(0));
+	string delim = isOut ? ":" : "+";
+	chan.init(vect[1], delim);
+	val1.init(vect[2], delim);
+	val2.init(vect[3], delim);
 }
 
 //===================================================

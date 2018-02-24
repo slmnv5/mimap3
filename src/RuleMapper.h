@@ -18,7 +18,7 @@ public:
 	}
 	const string toString() const;
 protected:
-
+	int verbose = 1;
 	vector<MidiEventDuo>& getRules() {
 		return rules;
 	}

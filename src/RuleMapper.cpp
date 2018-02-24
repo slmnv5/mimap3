@@ -5,11 +5,11 @@ using namespace std;
 
 void RuleMapper::preProcessString(string& str) const {
 	str = str.substr(0, str.find(";"));
-	str = regex_replace(str, regex("\\s+"), string(""));
-	str = regex_replace(str, regex("exit.*", regex_constants::icase),
-			string("a,,>c,120,0"));
-	str = regex_replace(str, regex("enter(=|>)*(.*)", regex_constants::icase),
-			string("$2=c,120,0"));
+	replaceAll(str, " ", "");
+	replaceAll(str, "\t", "");
+	replaceAll(str, "mute", "c,120,0");
+	replaceAll(str, "any", "a,,");
+	replaceAll(str, "dump", "n0,0,0");
 }
 
 void RuleMapper::parseRuleString(string& str) {
@@ -17,23 +17,30 @@ void RuleMapper::parseRuleString(string& str) {
 
 	if (str.size() == 0)
 		return;
-	static const char* regexRule = "([ncpsa][\\d,:]*)(=|>)([ncpsa][\\d,+-]*)";
-	static regex expr(regexRule);
-	smatch sm;    // same as std::match_results<string::const_iterator> sm;
-	if (!regex_match(str, sm, expr))
-		throw string(__func__) + "  Rule has incorrect format: " + str;
+	vector<string> twoParts;
+	splitString(str, "=", twoParts);
+	if (!twoParts.size() != 2) {
+		throw string(__func__) + "  Rule must have 2 parts separated by '=': "
+				+ str;
+	}
 
-#ifdef DEBUG
-	cout << string(__func__) << "  " << str << " tokens= " << sm.size() << endl;
-#endif
-	if (sm.size() != 4)
-		throw string(__func__) + "  Rule has incorrect elements: " + str;
+	vector<string> part1, part2;
+	splitString(twoParts[0], ",", part1);
+	splitString(twoParts[1], ",", part2);
+
+	if (verbose > 0)
+		cout << string(__func__) << "  " << str << " tokens= " << part1.size()
+				<< "/" << part2.size() << endl;
+
+
+	if (part1.size() != 4 || part2.size() != 4)
+		throw string(__func__) + "  Rule parts must have 4 elements: " + str;
 
 	MidiEventDuo ev;
-	ev.init(sm[2].str().at(0), sm[1], sm[3]);
+	ev.init(part1, part2);
 	if (!ev.isSafe())
 		throw string(__func__)
-				+ "  Rule is unsafe! Note off event may get lost: " + str;
+				+ "  Rule is unsafe! Note on/off event may get to different channels: " + str;
 
 	rules.push_back(move(ev));
 }
@@ -96,8 +103,7 @@ bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
 		}
 
 		changed = true;
-		if (ev.getOperation() == MidiEventDuo::RULESTOP)
-			break;
+
 	}
 	return changed;
 }

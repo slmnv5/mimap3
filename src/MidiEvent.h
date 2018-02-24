@@ -5,6 +5,11 @@
 
 using namespace std;
 
+//==================== utility functions ===================================
+void splitString(string line, const string& Delimiter, vector<string>& tokens);
+
+void replaceAll(string line, const string& del, const string& repl);
+
 enum class MidiEvType
 	: char {NOTYPE = 'a',
 	NOTEON = 'n',
@@ -33,9 +38,7 @@ class ValueRange {
 public:
 	int lower = TripleVal::MISSINGVAL;
 	int upper = TripleVal::MISSINGVAL;
-	void parseRange(const string&, bool);
-	void parseRangeOut(const string& str);
-	void parseRangeIn(const string& str);
+	void init(const string&, const string&);
 	int countborders() const;
 	bool match(int) const;
 	int transform(TripleVal, int) const;
@@ -56,14 +59,15 @@ public:
 	}
 	const string toString() const {
 		stringstream ss;
-		ss << static_cast<char>(evtype) << chan.toString()
-				<< "," << val1.toString() << "," << val2.toString();
+		ss << static_cast<char>(evtype) << chan.toString() << ","
+				<< val1.toString() << "," << val2.toString();
 		return ss.str();
 	}
 
-	void parseEventString(const string& str );
+	void init(const vector<string>&, bool);
 	void transform(TripleVal&, MidiEvType&) const;
 	bool match(const TripleVal&, const MidiEvType&) const;
+
 
 	MidiEvType evtype = MidiEvType::NOTYPE;
 	ValueRange chan;
@@ -71,37 +75,34 @@ public:
 	ValueRange val2;
 
 private:
-	void init(const char& tp, const string&, const string&, const string&);
+
 	bool isOutEvent;
 };
 //=============================================================
 class MidiEventDuo {
 public:
-	static char const RULESTOP = '>'; // rule terminate search of other rules
 	static char const RULEKEEP = '='; // rule applied and search continues
 
-	MidiEventDuo():inEvent( false), outEvent(true), op(RULESTOP) {}
+	MidiEventDuo() :
+			inEvent(false), outEvent(true) {
+	}
 	void transform(TripleVal&, MidiEvType&) const;
 	bool match(const TripleVal&, const MidiEvType&) const;
 
 	const string toString() const {
 		stringstream ss;
-		ss << "Rule: " << inEvent.toString() << op << outEvent.toString();
+		ss << "Rule: " << inEvent.toString() << outEvent.toString();
 		return ss.str();
 	}
-	void init(char opChar, const string& inStr, const string& outStr) {
-		op = opChar;
-		inEvent.parseEventString(inStr);
-		outEvent.parseEventString(outStr);
+	void init(vector<string> part1, vector<string> part2) {
+		inEvent.init(part1, false);
+		outEvent.init(part2, true);
 	}
-	const char& getOperation() const {
-		return op;
-	}
+
 	bool isSafe() const;
 protected:
 	MidiEvent inEvent;
 	MidiEvent outEvent;
-	char op;
 };
 
 #endif //MIDIEVENT_H

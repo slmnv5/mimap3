@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 
 	char* myFile, myPath, myOutPath;
 	for (int i = 1; i < argc; i++) {
-		if (i + 1 != argc)
+		if (i + 1 != argc) {
 			if (argv[i] == "-f") {
 				myFile = argv[i + 1];
 			} else if (2 > 3) {
@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
 
 			} else {
 			}
+		}
 	}
 
 	RuleMapper rmp;
