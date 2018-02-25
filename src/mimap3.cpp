@@ -7,31 +7,31 @@
 
 using namespace std;
 
+void help();
+
 int main(int argc, char* argv[]) {
-	if (argc < 1) {
-		cout << "Usage is ";
-		cin.get();
-		exit(0);
-	}
-
-	char* myFile, myPath, myOutPath;
+	char* ruleFile = nullptr;
+	int verbose = false;
 	for (int i = 1; i < argc; i++) {
-		if (i + 1 != argc) {
-			if (argv[i] == "-f") {
-				myFile = argv[i + 1];
-			} else if (2 > 3) {
-
-			} else if (5 > 1) {
-
-			} else {
-			}
+		if (strcmp(argv[i], "-f") == 0 && i + 1 <= argc) {
+			ruleFile = argv[i + 1];
+		} else if (strcmp(argv[i], "-v") == 0) {
+			verbose = 1;
+		} else if (strcmp(argv[i], "-vv") == 0) {
+			verbose = 2;
+		} else if (strcmp(argv[i], "-h") == 0) {
+			help();
+		} else {
 		}
+	}
+	if (ruleFile == nullptr) {
+		help();
 	}
 
 	RuleMapper rmp;
 	try {
 
-		rmp.parseFileStream("/home/erik/psr300.map");
+		rmp.parseFileStream(ruleFile);
 		cout << rmp.toString();
 
 		//AlsaMapper amp(rmp);
@@ -47,4 +47,23 @@ int main(int argc, char* argv[]) {
 	}
 	cout << "done" << endl;
 
+}
+
+void help() {
+	cout
+			<< "Usage: mimap3 <options>\n"
+					"<options> are:\n"
+					"  -h\n"
+					"    Displays this info\n"
+					"  -f <rules file>\n"
+					"    load file with MIDI mapping rules\n"
+					"  -v\n"
+					"    verbose info\n"
+					"  -vv\n"
+					"    verbose info and runtime MIDI info\n"
+					"Rules are lines in the file, comment character is ';'. Example \n"
+					"n,2,,0-30 = n,,,0; rule to mute any notes with velocity < 31 on channel 2 \n"
+					"n,1-16,, = p1-1,,2+1,; rule to map notes to  program change\n"
+					"\n";
+	exit(0);
 }
