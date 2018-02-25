@@ -8,8 +8,9 @@ void RuleMapper::preProcessString(string& str) const {
 	replaceAll(str, " ", "");
 	replaceAll(str, "\t", "");
 	replaceAll(str, "mute", "c,120,0");
-	replaceAll(str, "any", "a,,");
-	replaceAll(str, "dump", "n0,0,0");
+	replaceAll(str, "any", "a,,,");
+	replaceAll(str, "exit", "x,,,");
+	replaceAll(str, "ignore", "x,0,0,0");
 }
 
 void RuleMapper::parseRuleString(string& str) {

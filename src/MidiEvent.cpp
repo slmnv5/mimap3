@@ -17,7 +17,7 @@ void splitString(const string line1, const string& delimiter,
 	tokens.push_back(line);
 }
 
-void replaceAll(string line, const string& del, const string& repl) {
+void replaceAll(string& line, const string& del, const string& repl) {
 	string::size_type n = 0;
 	while ((n = line.find(del, n)) != string::npos) {
 		line.replace(n, del.size(), repl);
@@ -26,6 +26,8 @@ void replaceAll(string line, const string& del, const string& repl) {
 }
 
 int ValueRange::convertToInt(const string& str) {
+	if (str.size() == 0)
+		return -1;
 	try {
 		return stoi(str);
 	} catch (...) {
@@ -37,12 +39,7 @@ void ValueRange::init(const string& str, const string& delim) {
 	description = str;
 	lower = TripleVal::NONE;
 	upper = TripleVal::ZERO;
-	size_t len = str.size();
-	if (len == 0)
-		return;
-	if (len == 1 && str.at(0) == static_cast<char>(MidiEvType::ANY, 1)) {
-		return;
-	}
+
 	vector<string> twoParts;
 	splitString(str, delim, twoParts);
 
@@ -50,8 +47,9 @@ void ValueRange::init(const string& str, const string& delim) {
 		throw string(string(__func__)) + "  Input string has incorrect format: "
 				+ str;
 	lower = convertToInt(twoParts[0]);
-	if (lower <= TripleVal::NONE) {
-		throw string(__func__) + "  Lower value must be non negative: " + str;
+	if (lower < TripleVal::NONE) {
+		throw string(__func__) + "  Lower value must be non negative: [" + str
+				+ "]";
 	}
 
 	if (twoParts.size() == 2) {
@@ -119,8 +117,16 @@ void MidiEvent::init(const vector<string>& vect, bool isOut) {
 	if (vect.size() != 4)
 		throw string(__func__) + "  Event vector must have 4 parts";
 
-	evtype = static_cast<MidiEvType>(vect[0].at(0));
-	string delim = isOut ? ":" : "+";
+	char ev = vect[0].at(0);
+	evtype = static_cast<MidiEvType>(ev);
+	bool ok = (evtype == MidiEvType::ANYTHING
+			|| evtype == MidiEvType::CONTROLCHANGE
+			|| evtype == MidiEvType::NOTEON || evtype == MidiEvType::PROGCHANGE
+			|| evtype == MidiEvType::SETFLAG || evtype == MidiEvType::NONE);
+	if (!ok)
+		throw string(__func__) + "  Event type is incorrect: [" + vect[0] + "]";
+
+	string delim = isOut ? "+" : ":";
 	chan.init(vect[1], delim);
 	val1.init(vect[2], delim);
 	val2.init(vect[3], delim);

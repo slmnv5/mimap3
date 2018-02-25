@@ -8,11 +8,11 @@ using namespace std;
 //==================== utility functions ===================================
 void splitString(string line, const string& Delimiter, vector<string>& tokens);
 
-void replaceAll(string line, const string& del, const string& repl);
+void replaceAll(string& line, const string& del, const string& repl);
 
 enum class MidiEvType
 	: char {NONE = 'x',
-	ANY = 'a',
+	ANYTHING = 'a',
 	NOTEON = 'n',
 	CONTROLCHANGE = 'c',
 	PROGCHANGE = 'p',
