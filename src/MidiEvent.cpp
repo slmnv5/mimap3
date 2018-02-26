@@ -17,12 +17,15 @@ void splitString(const string line1, const string& delimiter,
 	tokens.push_back(line);
 }
 
-void replaceAll(string& line, const string& del, const string& repl) {
+int replaceAll(string& line, const string& del, const string& repl) {
+	int count = 0;
 	string::size_type n = 0;
 	while ((n = line.find(del, n)) != string::npos) {
 		line.replace(n, del.size(), repl);
 		n += repl.size();
+		count++;
 	}
+	return count;
 }
 
 int ValueRange::convertToInt(const string& str) {
@@ -134,15 +137,15 @@ void MidiEvent::init(const vector<string>& vect, bool isOut) {
 }
 
 //===================================================
-bool MidiEventDuo::match(const TripleVal& in, const MidiEvType& tp) const {
+bool MidiEventRule::match(const TripleVal& in, const MidiEvType& tp) const {
 	return inEvent.match(in, tp);
 }
 
-void MidiEventDuo::transform(TripleVal& in, MidiEvType& tp) const {
+void MidiEventRule::transform(TripleVal& in, MidiEvType& tp) const {
 	outEvent.transform(in, tp);
 }
 
-bool MidiEventDuo::isSafe() const {
+bool MidiEventRule::isSafe() const {
 	// out channel changes - we may miss note off event
 	if (outEvent.evtype != MidiEvType::NOTE && outEvent.evtype != MidiEvType::ANYTHING)
 		return true;

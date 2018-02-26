@@ -8,7 +8,7 @@ using namespace std;
 //==================== utility functions ===================================
 void splitString(string line, const string& Delimiter, vector<string>& tokens);
 
-void replaceAll(string& line, const string& del, const string& repl);
+int replaceAll(string& line, const string& del, const string& repl);
 
 enum class MidiEvType
 	: char {NONE = 'x',
@@ -82,12 +82,10 @@ private:
 	bool isOutEvent;
 };
 //=============================================================
-class MidiEventDuo {
+class MidiEventRule {
 public:
-	static char const RULEDELIM = '='; // rule applied and search continues
-
-	MidiEventDuo() :
-			inEvent(false), outEvent(true) {
+	MidiEventRule(bool term) :
+			terminate(term), inEvent(false), outEvent(true) {
 	}
 	void transform(TripleVal&, MidiEvType&) const;
 	bool match(const TripleVal&, const MidiEvType&) const;
@@ -103,7 +101,11 @@ public:
 	}
 
 	bool isSafe() const;
+	bool getTermiante() const {
+		return terminate;
+	}
 protected:
+	bool terminate = false;
 	MidiEvent inEvent;
 	MidiEvent outEvent;
 };

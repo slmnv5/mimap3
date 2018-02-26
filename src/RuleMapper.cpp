@@ -3,18 +3,20 @@
 
 using namespace std;
 
-void RuleMapper::preProcessString(string& str) const {
+bool RuleMapper::preProcessString(string& str) {
 	str = str.substr(0, str.find(";"));
+	bool terminating = (replaceAll(str, ">", "=") > 0);
 	replaceAll(str, " ", "");
 	replaceAll(str, "\t", "");
 	replaceAll(str, "mute", "c,120,0");
 	replaceAll(str, "any", "a,,,");
 	replaceAll(str, "exit", "x,,,");
 	replaceAll(str, "ignore", "x,0,0,0");
+	return terminating;
 }
 
 void RuleMapper::parseRuleString(string& str) {
-	preProcessString(str);
+	bool term = preProcessString(str);
 
 	if (str.size() == 0)
 		return;
@@ -36,14 +38,14 @@ void RuleMapper::parseRuleString(string& str) {
 	if (part1.size() != 4 || part2.size() != 4)
 		throw string(__func__) + "  Rule parts must have 4 elements: " + str;
 
-	MidiEventDuo ev;
-	ev.init(part1, part2);
-	if (!ev.isSafe())
+	MidiEventRule oneRule(term);
+	oneRule.init(part1, part2);
+	if (!oneRule.isSafe())
 		throw string(__func__)
 				+ "  Rule is unsafe! Note on/off event may get to different channels: "
 				+ str;
 
-	rules.push_back(move(ev));
+	rules.push_back(move(oneRule));
 }
 
 void RuleMapper::parseFileStream(const string& fileName) {
@@ -66,8 +68,8 @@ void RuleMapper::parseFileStream(const string& fileName) {
 int RuleMapper::findMatchingRule(const TripleVal& val, const MidiEvType& tp,
 		int startFrom) const {
 	for (size_t i = startFrom; i < getSize(); i++) {
-		const MidiEventDuo& ev = rules[i];
-		if (ev.match(val, tp))
+		const MidiEventRule& oneRule = rules[i];
+		if (oneRule.match(val, tp))
 			return i;
 	}
 	return -1;
@@ -77,35 +79,30 @@ bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
 	bool changed = false;
 
 	for (size_t i = flagPosition; i < getSize(); i++) {
-		const MidiEventDuo& ev = rules[i];
-		if (!ev.match(val, tp))
+		const MidiEventRule& oneRule = rules[i];
+		if (!oneRule.match(val, tp))
 			continue;
 
 		if (verbose > 1)
 			cout << "Found match for: " << static_cast<char>(tp)
-					<< val.toString() << ", rule: " << ev.toString() << endl;
+					<< val.toString() << ", in rule: " << oneRule.toString() << endl;
 
-		ev.transform(val, tp);
+		oneRule.transform(val, tp);
 		changed = true;
 		if (tp == MidiEvType::SETFLAG) {
 			int newPos = findMatchingRule(val, tp, 0);
 			flagPosition = newPos < 0 ? flagPosition : newPos;
 			if (verbose > 1) {
-				if (newPos < 0) {
-					cout << "No match for: " << static_cast<char>(tp)
-							<< val.toString() << ", rule: " << ev.toString()
-							<< endl;
-				} else {
-					cout << "Reset starting flag to " << flagPosition
-							<< ", rule: " << ev.toString() << endl;
-				}
+				string message = newPos < 0 ? "Not found" : "Found";
+				cout << message << " flag for: " << static_cast<char>(tp)
+						<< val.toString() << ", in rule: " << oneRule.toString()
+						<< endl;
 			}
-			tp = MidiEvType::NONE; // will stop scan and will not send event
-			break;
-		} else if (tp == MidiEvType::NONE) {
-			break;
 		}
+		if (oneRule.getTermiante())
+			break;
 	}
+
 	return changed;
 }
 

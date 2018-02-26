@@ -18,19 +18,19 @@ public:
 		return rules.size();
 	}
 	const string toString() const;
-	int getVerbose() {
+	int getVerbose() const {
 		return verbose;
 	}
 protected:
 	int verbose;
-	vector<MidiEventDuo>& getRules() {
+	vector<MidiEventRule>& getRules() {
 		return rules;
 	}
 private:
 	int flagPosition = 0;
-	vector<MidiEventDuo> rules;
+	vector<MidiEventRule> rules;
 
-	void preProcessString(string&) const;
+	static bool preProcessString(string&);
 	void parseRuleString(string&);
 };
 
