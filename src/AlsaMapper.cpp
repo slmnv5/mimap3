@@ -11,10 +11,16 @@ bool AlsaMapper::translate(snd_seq_event_t* event) {
 
 	readMidiEvent(event, val, tp);
 	bool changed = rmp.checkRules(val, tp);
-	if (changed) {
-		writeMidiEvent(event, val, tp);
-		cout << static_cast<char>(tp) << val.toString();
-	}
+	if (!changed)
+		return true; // pass as is
+
+	if (changed && tp == MidiEvType::NONE)
+		return false; // drop event
+
+	writeMidiEvent(event, val, tp);
+	if (rmp.getVerbose() > 1)
+		cout << "---" << static_cast<char>(tp) << val.toString();
+
 	return changed;
 }
 
@@ -25,7 +31,7 @@ void AlsaMapper::writeMidiEvent(snd_seq_event_t* event, const TripleVal& val,
 	event->data.note.velocity = val.v2;
 
 	switch (tp) {
-	case MidiEvType::NOTEON:
+	case MidiEvType::NOTE:
 		event->type = SND_SEQ_EVENT_NOTEON;
 		break;
 	case MidiEvType::PROGCHANGE:
@@ -49,7 +55,7 @@ void AlsaMapper::readMidiEvent(snd_seq_event_t* event, TripleVal& val,
 	case SND_SEQ_EVENT_NOTE:
 	case SND_SEQ_EVENT_NOTEON:
 	case SND_SEQ_EVENT_KEYPRESS:
-		tp = MidiEvType::NOTEON;
+		tp = MidiEvType::NOTE;
 		val.ch = event->data.note.channel;
 		val.v1 = event->data.note.note;
 		val.v2 = event->data.note.velocity;

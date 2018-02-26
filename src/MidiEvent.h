@@ -13,7 +13,7 @@ void replaceAll(string& line, const string& del, const string& repl);
 enum class MidiEvType
 	: char {NONE = 'x',
 	ANYTHING = 'a',
-	NOTEON = 'n',
+	NOTE = 'n',
 	CONTROLCHANGE = 'c',
 	PROGCHANGE = 'p',
 	SETFLAG = 's'

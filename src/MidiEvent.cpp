@@ -26,13 +26,14 @@ void replaceAll(string& line, const string& del, const string& repl) {
 }
 
 int ValueRange::convertToInt(const string& str) {
-	if (str.size() == 0)
+	int sz = str.size();
+	if (sz == 0)
 		return -1;
-	try {
-		return stoi(str);
-	} catch (...) {
-		throw string(__func__) + "  Not an integer value: [" + str + "]";
-	}
+	bool onlyDigits = str.find_first_not_of( "0123456789" ) == string::npos;
+	if (sz > 3 || !onlyDigits)
+		throw string(__func__) + "  Not correct integer value: [" + str + "]";
+
+	return stoi(str);
 }
 
 void ValueRange::init(const string& str, const string& delim) {
@@ -53,7 +54,7 @@ void ValueRange::init(const string& str, const string& delim) {
 	}
 
 	if (twoParts.size() == 2) {
-		upper = convertToInt(twoParts[0]);
+		upper = convertToInt(twoParts[1]);
 
 	}
 }
@@ -108,7 +109,7 @@ void MidiEvent::transform(TripleVal& in, MidiEvType& tp) const {
 bool MidiEvent::match(const TripleVal& in, const MidiEvType& tp) const {
 	if (isOutEvent)
 		throw string(__func__) + "  Out event can not match MidiMessage";
-	return (evtype == tp || evtype == MidiEvType::NONE) && chan.match(in.ch)
+	return (evtype == tp || evtype == MidiEvType::ANYTHING) && chan.match(in.ch)
 			&& val1.match(in.v1) && val2.match(in.v2);
 }
 
@@ -121,7 +122,7 @@ void MidiEvent::init(const vector<string>& vect, bool isOut) {
 	evtype = static_cast<MidiEvType>(ev);
 	bool ok = (evtype == MidiEvType::ANYTHING
 			|| evtype == MidiEvType::CONTROLCHANGE
-			|| evtype == MidiEvType::NOTEON || evtype == MidiEvType::PROGCHANGE
+			|| evtype == MidiEvType::NOTE || evtype == MidiEvType::PROGCHANGE
 			|| evtype == MidiEvType::SETFLAG || evtype == MidiEvType::NONE);
 	if (!ok)
 		throw string(__func__) + "  Event type is incorrect: [" + vect[0] + "]";
@@ -143,7 +144,7 @@ void MidiEventDuo::transform(TripleVal& in, MidiEvType& tp) const {
 
 bool MidiEventDuo::isSafe() const {
 	// out channel changes - we may miss note off event
-	if (outEvent.evtype != MidiEvType::NOTEON)
+	if (outEvent.evtype != MidiEvType::NOTE && outEvent.evtype != MidiEvType::ANYTHING)
 		return true;
 
 	if (outEvent.chan.countborders() == 0)

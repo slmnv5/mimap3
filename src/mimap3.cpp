@@ -28,17 +28,17 @@ int main(int argc, char* argv[]) {
 		help();
 	}
 
-	RuleMapper rmp;
+	RuleMapper rmp(verbose);
 	try {
 
 		rmp.parseFileStream(ruleFile);
 		cout << rmp.toString();
 
-		//AlsaMapper amp(rmp);
+		AlsaMapper amp(rmp);
 
-		//MidiFilter mf(amp);
-		//mf.open_alsa_connection();
-		//mf.process_events();
+		MidiFilter mf(amp);
+		mf.open_alsa_connection();
+		mf.process_events();
 
 	} catch (const string& err) {
 		cout << __func__ << err << endl;

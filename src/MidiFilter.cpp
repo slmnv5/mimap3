@@ -37,7 +37,10 @@ void MidiFilter::process_events() {
 			continue;
 		}
 
-		trans.translate(event);
+		if (!trans.translate(event)) {
+			snd_seq_free_event(event);
+			continue;
+		}
 
 		snd_seq_ev_set_subs(event);
 		snd_seq_ev_set_direct(event);
