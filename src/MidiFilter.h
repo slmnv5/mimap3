@@ -14,7 +14,8 @@ class MidiTranslator {
 public:
 	virtual ~MidiTranslator() {
 	}
-	virtual bool translate(snd_seq_event_t* event) = 0;
+	// map event and if true send the event to OUT
+	virtual bool sendMappedMidiEvent(snd_seq_event_t* event) = 0;
 };
 
 class MidiFilter {

@@ -37,7 +37,7 @@ void MidiFilter::process_events() {
 			continue;
 		}
 
-		if (!trans.translate(event)) {
+		if (!trans.sendMappedMidiEvent(event)) {
 			snd_seq_free_event(event);
 			continue;
 		}

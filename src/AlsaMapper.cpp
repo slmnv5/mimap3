@@ -5,7 +5,7 @@
 
 using namespace std;
 
-bool AlsaMapper::translate(snd_seq_event_t* event) {
+bool AlsaMapper::sendMappedMidiEvent(snd_seq_event_t* event) {
 	MidiEvType tp = MidiEvType::NONE;
 	TripleVal val;
 
@@ -19,7 +19,7 @@ bool AlsaMapper::translate(snd_seq_event_t* event) {
 
 	writeMidiEvent(event, val, tp);
 	if (rmp.getVerbose() > 1)
-		cout << "---" << static_cast<char>(tp) << val.toString();
+		cout << "Will send mapped event: " << static_cast<char>(tp) << val.toString();
 
 	return changed;
 }
