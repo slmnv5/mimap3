@@ -32,7 +32,7 @@ int ValueRange::convertToInt(const string& str) {
 	int sz = str.size();
 	if (sz == 0)
 		return -1;
-	bool onlyDigits = str.find_first_not_of( "0123456789" ) == string::npos;
+	bool onlyDigits = str.find_first_not_of("0123456789") == string::npos;
 	if (sz > 3 || !onlyDigits)
 		throw string(__func__) + "  Not correct integer value: [" + str + "]";
 
@@ -78,18 +78,18 @@ bool ValueRange::match(int val) const {
 	else
 		return val <= upper && val >= lower;
 }
-int ValueRange::transform(TripleVal inputVal, int someValue) const {
+int ValueRange::transform(const TripleVal& baseVal, int someValue) const {
 	if (countborders() == 0)
 		return someValue;
 	else if (countborders() == 1)
 		return lower;
 	else {
 		if (lower == 1)
-			return inputVal.ch + upper;
+			return baseVal.ch + upper;
 		else if (lower == 2)
-			return inputVal.v1 + upper;
+			return baseVal.v1 + upper;
 		else if (lower == 3)
-			return inputVal.v2 + upper;
+			return baseVal.v2 + upper;
 		else
 			throw string(__func__) + "  Incorrect Value for out Midi range: "
 					+ this->toString();
@@ -98,22 +98,25 @@ int ValueRange::transform(TripleVal inputVal, int someValue) const {
 
 //========================================================
 
-void MidiEvent::transform(TripleVal& in, MidiEvType& tp) const {
-	if (!isOutEvent)
+void MidiEvent::transform(TripleVal& someVal,
+		MidiEvType& someType) const {
+	if (!isOut())
 		throw string(__func__) + "  Input event can not transform MidiMessage";
-	TripleVal newVal;
-	newVal.ch = chan.transform(in, 1);
-	newVal.v1 = val1.transform(in, 2);
-	newVal.v2 = val2.transform(in, 3);
-	in = newVal;
-	tp = evtype;
+
+	const TripleVal saveVal = someVal;
+	someVal.ch = chan.transform(saveVal, someVal.ch);
+	someVal.v1 = val1.transform(saveVal, someVal.v1);
+	someVal.v2 = val2.transform(saveVal, someVal.v2);
+	someType = evtype;
 }
 
-bool MidiEvent::match(const TripleVal& in, const MidiEvType& tp) const {
+bool MidiEvent::match(const TripleVal& someVal,
+		const MidiEvType& someType) const {
 	if (isOutEvent)
 		throw string(__func__) + "  Out event can not match MidiMessage";
-	return (evtype == tp || evtype == MidiEvType::ANYTHING) && chan.match(in.ch)
-			&& val1.match(in.v1) && val2.match(in.v2);
+	return (evtype == someType || evtype == MidiEvType::ANYTHING)
+			&& chan.match(someVal.ch) && val1.match(someVal.v1)
+			&& val2.match(someVal.v2);
 }
 
 void MidiEvent::init(const vector<string>& vect, bool isOut) {
@@ -124,9 +127,9 @@ void MidiEvent::init(const vector<string>& vect, bool isOut) {
 	char ev = vect[0].at(0);
 	evtype = static_cast<MidiEvType>(ev);
 	bool ok = (evtype == MidiEvType::ANYTHING
-			|| evtype == MidiEvType::CONTROLCHANGE
-			|| evtype == MidiEvType::NOTE || evtype == MidiEvType::PROGCHANGE
-			|| evtype == MidiEvType::SETFLAG || evtype == MidiEvType::NONE);
+			|| evtype == MidiEvType::CONTROLCHANGE || evtype == MidiEvType::NOTE
+			|| evtype == MidiEvType::PROGCHANGE || evtype == MidiEvType::SETFLAG
+			|| evtype == MidiEvType::NONE);
 	if (!ok)
 		throw string(__func__) + "  Event type is incorrect: [" + vect[0] + "]";
 
@@ -137,17 +140,11 @@ void MidiEvent::init(const vector<string>& vect, bool isOut) {
 }
 
 //===================================================
-bool MidiEventRule::match(const TripleVal& in, const MidiEvType& tp) const {
-	return inEvent.match(in, tp);
-}
-
-void MidiEventRule::transform(TripleVal& in, MidiEvType& tp) const {
-	outEvent.transform(in, tp);
-}
 
 bool MidiEventRule::isSafe() const {
 	// out channel changes - we may miss note off event
-	if (outEvent.evtype != MidiEvType::NOTE && outEvent.evtype != MidiEvType::ANYTHING)
+	if (outEvent.evtype != MidiEvType::NOTE
+			&& outEvent.evtype != MidiEvType::ANYTHING)
 		return true;
 
 	if (outEvent.chan.countborders() == 0)

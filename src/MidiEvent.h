@@ -44,7 +44,7 @@ public:
 	void init(const string&, const string&);
 	int countborders() const;
 	bool match(int) const;
-	int transform(TripleVal, int) const;
+	int transform(const TripleVal&, int) const;
 
 	const string& toString() const {
 		return description;
@@ -76,9 +76,11 @@ public:
 	ValueRange chan;
 	ValueRange val1;
 	ValueRange val2;
+	bool isOut() const {
+		return isOutEvent;
+	}
 
 private:
-
 	bool isOutEvent;
 };
 //=============================================================
@@ -87,12 +89,11 @@ public:
 	MidiEventRule(bool term) :
 			terminate(term), inEvent(false), outEvent(true) {
 	}
-	void transform(TripleVal&, MidiEvType&) const;
-	bool match(const TripleVal&, const MidiEvType&) const;
-
 	const string toString() const {
 		stringstream ss;
-		ss << "Rule: " << inEvent.toString() << "=" << outEvent.toString();
+		string separator = terminate ? ">" : "=";
+		ss << "Rule: " << inEvent.toString() << separator
+				<< outEvent.toString();
 		return ss.str();
 	}
 	void init(vector<string> part1, vector<string> part2) {
@@ -104,6 +105,13 @@ public:
 	bool getTermiante() const {
 		return terminate;
 	}
+	const MidiEvent& getOutEvent() const {
+		return outEvent;
+	}
+	const MidiEvent& getInEvent() const {
+		return inEvent;
+	}
+
 protected:
 	bool terminate = false;
 	MidiEvent inEvent;

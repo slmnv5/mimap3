@@ -65,11 +65,11 @@ void RuleMapper::parseFileStream(const string& fileName) {
 	f.close();
 }
 
-int RuleMapper::findMatchingRule(const TripleVal& val, const MidiEvType& tp,
-		int startFrom) const {
-	for (size_t i = startFrom; i < getSize(); i++) {
+int RuleMapper::findMatchingRule(const TripleVal& val,
+		const MidiEvType& tp) const {
+	for (size_t i = 0; i < getSize(); i++) {
 		const MidiEventRule& oneRule = rules[i];
-		if (oneRule.match(val, tp))
+		if (oneRule.getInEvent().match(val, tp))
 			return i;
 	}
 	return -1;
@@ -80,17 +80,21 @@ bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
 
 	for (size_t i = flagPosition; i < getSize(); i++) {
 		const MidiEventRule& oneRule = rules[i];
-		if (!oneRule.match(val, tp))
+		const MidiEvent& inEvent = oneRule.getInEvent();
+		const MidiEvent& outEvent = oneRule.getOutEvent();
+
+		if (!inEvent.match(val, tp))
 			continue;
 
 		if (verbose > 1)
 			cout << "Found match for: " << static_cast<char>(tp)
-					<< val.toString() << ", in rule: " << oneRule.toString() << endl;
+					<< val.toString() << ", in rule: " << oneRule.toString()
+					<< endl;
 
-		oneRule.transform(val, tp);
-		changed = true;
+		outEvent.transform(val, tp);
+		changed=true;
 		if (tp == MidiEvType::SETFLAG) {
-			int newPos = findMatchingRule(val, tp, 0);
+			int newPos = findMatchingRule(val, tp);
 			flagPosition = newPos < 0 ? flagPosition : newPos;
 			if (verbose > 1) {
 				string message = newPos < 0 ? "Not found" : "Found";
@@ -102,7 +106,6 @@ bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
 		if (oneRule.getTermiante())
 			break;
 	}
-
 	return changed;
 }
 
