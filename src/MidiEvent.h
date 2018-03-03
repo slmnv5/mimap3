@@ -5,13 +5,14 @@
 
 using namespace std;
 
+typedef unsigned char UCHAR;
 //==================== utility functions ===================================
 void splitString(string line, const string& Delimiter, vector<string>& tokens);
 
 int replaceAll(string& line, const string& del, const string& repl);
 
 enum class MidiEvType
-	: char {NONE = 'x',
+	: UCHAR {NONE = 'x',
 	ANYTHING = 'a',
 	NOTE = 'n',
 	CONTROLCHANGE = 'c',
@@ -19,63 +20,113 @@ enum class MidiEvType
 	SETFLAG = 's'
 };
 
+class TripleVal;
+
 //=============================================================
-
-class TripleVal {
-public:
-	static char const NONE = -1;
-	static char const ZERO = 0;
-
-	char ch = NONE; // midi channel
-	char v1 = NONE; // midi note or cc
-	char v2 = ZERO; // midi velocity or cc value
-	const string toString() const {
-		stringstream ss;
-		ss << ch << "," << v1 << "," << v2 << endl;
-		return ss.str();
-	}
-};
-//=============================================================
-
 class ValueRange {
 public:
-	int lower = TripleVal::NONE;
-	int upper = TripleVal::ZERO;
+	ValueRange() {
+		init();
+	}
+	void init(UCHAR a, UCHAR b) {
+		lower = a;
+		upper = b;
+	}
+	void init(UCHAR a) {
+		lower = a;
+		upper = ZERO;
+	}
+	void init() {
+		lower = NONE1;
+		upper = ZERO;
+	}
+	const UCHAR& get() const {
+		return lower;
+	}
+	UCHAR& get() {
+		return lower;
+	}
+
 	void init(const string&, const string&);
 	int countborders() const;
 	bool match(int) const;
-	int transform(const TripleVal&, int) const;
-
-	const string& toString() const {
-		return description;
+	bool isNone() const {
+		return lower >= NONE1;
 	}
+	void transform(const TripleVal&, UCHAR&) const;
 
+	const string toString() const {
+		stringstream ss;
+		ss << lower << delimiter << upper;
+		return ss.str();
+	}
 private:
+	static UCHAR const NONE1 = 128;
+	static UCHAR const ZERO = 0;
+
+	UCHAR lower;
+	UCHAR upper;
+
 	int convertToInt(const string&);
 	string description;
+	char delimiter = ':';
+};
+
+class TripleVal {
+public:
+	void init(UCHAR a, UCHAR b, UCHAR c) {
+		ch.init(a);
+		v1.init(b);
+		v2.init(c);
+	}
+	void init(UCHAR a, UCHAR b) {
+		ch.init(a);
+		v1.init(b);
+		v2.init();
+	}
+
+	const string toString() const {
+		stringstream ss;
+		ss << ch.toString() << "," << v1.toString() << "," << v2.toString()
+				<< '\t';
+		return ss.str();
+	}
+
+	const UCHAR& get(int index) const {
+		if (index == 0)
+			return ch.get();
+		else if (index == 1)
+			return v1.get();
+		else if (index == 2)
+			return v2.get();
+		else
+			throw string(__func__) + "  Out event can not match MidiMessage";
+
+	}
+	ValueRange ch; // midi channel
+	ValueRange v1; // midi note or cc
+	ValueRange v2; // midi velocity or cc value
+
 };
 
 //=============================================================
-class MidiEvent {
+class MidiEvent: public TripleVal {
 public:
 	MidiEvent(bool isOut = false) :
-			isOutEvent(isOut) {
+			TripleVal(), isOutEvent(isOut) {
 	}
 	const string toString() const {
 		stringstream ss;
-		ss << static_cast<char>(evtype) << "," << chan.toString() << ","
-				<< val1.toString() << "," << val2.toString();
+		ss << static_cast<char>(evtype) << "," << toString();
 		return ss.str();
 	}
 
 	void init(const vector<string>&, bool);
 	void transform(TripleVal&, MidiEvType&) const;
-	bool match(const TripleVal&, const MidiEvType&) const;
+	bool match(const MidiEvent&) const;
 
 	MidiEvType evtype = MidiEvType::NONE;
-	ValueRange chan;
-	ValueRange val1;
-	ValueRange val2;
+
 	bool isOut() const {
 		return isOutEvent;
 	}

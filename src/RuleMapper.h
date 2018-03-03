@@ -12,8 +12,11 @@ public:
 			verbose(vbLevel) {
 	}
 	void parseFileStream(const string&);
-	int findMatchingRule(const TripleVal&, const MidiEvType&) const;
-	bool checkRules(TripleVal&, MidiEvType&);
+	int findMatchingRule(const MidiEvent&, int startPos = 0) const;
+	bool applyRules(MidiEvent&);
+	MidiEventRule& getRule(int i) {
+		return rules[i];
+	}
 	size_t getSize() const {
 		return rules.size();
 	}

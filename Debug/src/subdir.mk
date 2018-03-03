@@ -8,21 +8,24 @@ CPP_SRCS += \
 ../src/MidiEvent.cpp \
 ../src/MidiFilter.cpp \
 ../src/RuleMapper.cpp \
-../src/mimap3.cpp 
+../src/mimap3.cpp \
+../src/tests.cpp 
 
 OBJS += \
 ./src/AlsaMapper.o \
 ./src/MidiEvent.o \
 ./src/MidiFilter.o \
 ./src/RuleMapper.o \
-./src/mimap3.o 
+./src/mimap3.o \
+./src/tests.o 
 
 CPP_DEPS += \
 ./src/AlsaMapper.d \
 ./src/MidiEvent.d \
 ./src/MidiFilter.d \
 ./src/RuleMapper.d \
-./src/mimap3.d 
+./src/mimap3.d \
+./src/tests.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -7,28 +7,28 @@ using namespace std;
 
 bool AlsaMapper::sendMappedMidiEvent(snd_seq_event_t* event) {
 	MidiEvType tp = MidiEvType::NONE;
-	TripleVal val;
+	MidiEvent ev;
 
-	readMidiEvent(event, val, tp);
-	bool changed = rmp.checkRules(val, tp);
+	readMidiEvent(event, ev);
+	bool changed = rmp.applyRules(ev, tp);
 	if (!changed)
 		return true; // pass as is
 
 	if (changed && tp == MidiEvType::NONE)
 		return false; // drop event
 
-	writeMidiEvent(event, val, tp);
+	writeMidiEvent(event, ev, tp);
 	if (rmp.getVerbose() > 1)
-		cout << "Will send mapped event: " << static_cast<char>(tp) << val.toString();
+		cout << "Will send mapped event: " << static_cast<char>(tp)
+				<< ev.toString();
 
 	return changed;
 }
 
-void AlsaMapper::writeMidiEvent(snd_seq_event_t* event, const TripleVal& val,
-		const MidiEvType& tp) {
-	event->data.note.channel = val.ch;
-	event->data.note.note = val.v1;
-	event->data.note.velocity = val.v2;
+void AlsaMapper::writeMidiEvent(snd_seq_event_t* event, const MidiEvent& ev) {
+	event->data.note.channel = ev.get(0);
+	event->data.note.note = ev.get(1);
+	event->data.note.velocity = ev.get(2);
 
 	switch (tp) {
 	case MidiEvType::NOTE:
@@ -45,8 +45,7 @@ void AlsaMapper::writeMidiEvent(snd_seq_event_t* event, const TripleVal& val,
 	}
 }
 
-void AlsaMapper::readMidiEvent(snd_seq_event_t* event, TripleVal& val,
-		MidiEvType& tp) const {
+void AlsaMapper::readMidiEvent(snd_seq_event_t* event, MidiEvent& ev) const {
 
 	switch (event->type) {
 // snd_seq_ev_note
@@ -55,18 +54,16 @@ void AlsaMapper::readMidiEvent(snd_seq_event_t* event, TripleVal& val,
 	case SND_SEQ_EVENT_NOTE:
 	case SND_SEQ_EVENT_NOTEON:
 	case SND_SEQ_EVENT_KEYPRESS:
-		tp = MidiEvType::NOTE;
-		val.ch = event->data.note.channel;
-		val.v1 = event->data.note.note;
-		val.v2 = event->data.note.velocity;
+		ev.evtype = MidiEvType::NOTE;
+		ev.init(event->data.note.channel, event->data.note.note,
+				event->data.note.velocity);
 		break;
 
 // snd_seq_ev_ctrl
 	case SND_SEQ_EVENT_PGMCHANGE:
-		tp = MidiEvType::PROGCHANGE;
-		val.ch = event->data.control.channel;
-		val.v1 = event->data.control.value;
-		val.v2 = TripleVal::NONE;
+		ev.evtype = MidiEvType::PROGCHANGE;
+		ev.init(event->data.control.channel, event->data.control.value);
+
 		break;
 
 	case SND_SEQ_EVENT_CONTROLLER:
@@ -75,17 +72,13 @@ void AlsaMapper::readMidiEvent(snd_seq_event_t* event, TripleVal& val,
 	case SND_SEQ_EVENT_CONTROL14:
 	case SND_SEQ_EVENT_NONREGPARAM:
 	case SND_SEQ_EVENT_REGPARAM:
-		tp = MidiEvType::CONTROLCHANGE;
-		val.ch = event->data.control.channel;
-		val.v1 = event->data.control.param;
-		val.v2 = event->data.control.value;
+		ev.evtype = MidiEvType::CONTROLCHANGE;
+		ev.init(event->data.control.channel, event->data.control.param,
+				event->data.control.value);
 		break;
 // everything else
 	default:
-		tp = MidiEvType::NONE;
-		val.ch = TripleVal::NONE;
-		val.v1 = TripleVal::NONE;
-		val.v2 = TripleVal::NONE;
+		ev.evtype = MidiEvType::NONE;
 		break;
 	}
 }

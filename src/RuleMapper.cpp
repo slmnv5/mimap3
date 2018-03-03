@@ -65,17 +65,16 @@ void RuleMapper::parseFileStream(const string& fileName) {
 	f.close();
 }
 
-int RuleMapper::findMatchingRule(const TripleVal& val,
-		const MidiEvType& tp) const {
-	for (size_t i = 0; i < getSize(); i++) {
+int RuleMapper::findMatchingRule(const MidiEvent& ev, int startPos) const {
+	for (size_t i = startPos; i < getSize(); i++) {
 		const MidiEventRule& oneRule = rules[i];
-		if (oneRule.getInEvent().match(val, tp))
+		if (oneRule.getInEvent().match(ev))
 			return i;
 	}
 	return -1;
 }
 
-bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
+bool RuleMapper::applyRules(MidiEvent& ev) {
 	bool changed = false;
 
 	for (size_t i = flagPosition; i < getSize(); i++) {
@@ -83,7 +82,7 @@ bool RuleMapper::checkRules(TripleVal& val, MidiEvType& tp) {
 		const MidiEvent& inEvent = oneRule.getInEvent();
 		const MidiEvent& outEvent = oneRule.getOutEvent();
 
-		if (!inEvent.match(val, tp))
+		if (!inEvent.match(ev))
 			continue;
 
 		if (verbose > 1)

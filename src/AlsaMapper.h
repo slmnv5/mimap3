@@ -14,15 +14,15 @@ using namespace std;
 
 class AlsaMapper: public MidiTranslator {
 private:
-	void readMidiEvent(snd_seq_event_t* event, TripleVal& val, MidiEvType& tp) const;
-	void writeMidiEvent(snd_seq_event_t* event, const TripleVal& val,
-			const MidiEvType& tp);
+	void readMidiEvent(snd_seq_event_t* event, MidiEvent& ev) const;
+	void writeMidiEvent(snd_seq_event_t* event, const MidiEvent& ev);
 	RuleMapper& rmp;
 public:
 	AlsaMapper(RuleMapper& rules) :
 			rmp(rules) {
 	}
-	virtual ~AlsaMapper() {}
+	virtual ~AlsaMapper() {
+	}
 	// map event and if true send the event to OUT
 	virtual bool sendMappedMidiEvent(snd_seq_event_t* event);
 

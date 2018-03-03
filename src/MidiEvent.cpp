@@ -41,9 +41,10 @@ int ValueRange::convertToInt(const string& str) {
 
 void ValueRange::init(const string& str, const string& delim) {
 	description = str;
-	lower = TripleVal::NONE;
-	upper = TripleVal::ZERO;
+	if (delim != "+" || delim != "-" || delim != ":")
+		throw string(__func__) + "  Not correct delimiter: [" + delim + "]";
 
+	delimiter = delim.at(0);
 	vector<string> twoParts;
 	splitString(str, delim, twoParts);
 
@@ -51,7 +52,7 @@ void ValueRange::init(const string& str, const string& delim) {
 		throw string(string(__func__)) + "  Input string has incorrect format: "
 				+ str;
 	lower = convertToInt(twoParts[0]);
-	if (lower < TripleVal::NONE) {
+	if (lower < ZERO) {
 		throw string(__func__) + "  Lower value must be non negative: [" + str
 				+ "]";
 	}
@@ -63,14 +64,16 @@ void ValueRange::init(const string& str, const string& delim) {
 }
 
 int ValueRange::countborders() const {
-	int cnt = 2;
-	if (lower <= TripleVal::NONE)
-		cnt = 0;
-	else if (lower != TripleVal::NONE and upper == TripleVal::ZERO)
-		cnt = 1;
-	return cnt;
+	if (isNone())
+		return 0;
+	else if (upper == ZERO)
+		return 1;
+	return 2;
 }
 bool ValueRange::match(int val) const {
+	if (delimiter != ':')
+		throw string(__func__) + "  match cannot be done for this range: "
+				+ this->toString();
 	if (countborders() == 0)
 		return true;
 	else if (countborders() == 1)
@@ -78,18 +81,24 @@ bool ValueRange::match(int val) const {
 	else
 		return val <= upper && val >= lower;
 }
-int ValueRange::transform(const TripleVal& baseVal, int someValue) const {
+void ValueRange::transform(const TripleVal& baseVal, UCHAR& someValue) const {
 	if (countborders() == 0)
-		return someValue;
+		;
 	else if (countborders() == 1)
-		return lower;
+		someValue = lower;
 	else {
 		if (lower == 1)
-			return baseVal.ch + upper;
+			someValue = baseVal.ch.get() + upper;
 		else if (lower == 2)
-			return baseVal.v1 + upper;
+			someValue = baseVal.v1.get() + upper;
 		else if (lower == 3)
-			return baseVal.v2 + upper;
+			someValue = baseVal.v2.get() + upper;
+		else if (lower == 11)
+			someValue = baseVal.v1.get() - upper;
+		else if (lower == 12)
+			someValue = baseVal.v2.get() - upper;
+		else if (lower == 13)
+			someValue = baseVal.v2.get() - upper;
 		else
 			throw string(__func__) + "  Incorrect Value for out Midi range: "
 					+ this->toString();
@@ -98,25 +107,23 @@ int ValueRange::transform(const TripleVal& baseVal, int someValue) const {
 
 //========================================================
 
-void MidiEvent::transform(TripleVal& someVal,
-		MidiEvType& someType) const {
+void MidiEvent::transform(TripleVal& someVal, MidiEvType& someType) const {
 	if (!isOut())
 		throw string(__func__) + "  Input event can not transform MidiMessage";
 
 	const TripleVal saveVal = someVal;
-	someVal.ch = chan.transform(saveVal, someVal.ch);
-	someVal.v1 = val1.transform(saveVal, someVal.v1);
-	someVal.v2 = val2.transform(saveVal, someVal.v2);
+	this->ch.transform(saveVal, someVal.ch.get());
+	this->v1.transform(saveVal, someVal.v1.get());
+	this->v2.transform(saveVal, someVal.v2.get());
 	someType = evtype;
 }
 
-bool MidiEvent::match(const TripleVal& someVal,
-		const MidiEvType& someType) const {
+bool MidiEvent::match(const MidiEvent& ev) const {
 	if (isOutEvent)
 		throw string(__func__) + "  Out event can not match MidiMessage";
-	return (evtype == someType || evtype == MidiEvType::ANYTHING)
-			&& chan.match(someVal.ch) && val1.match(someVal.v1)
-			&& val2.match(someVal.v2);
+	return (evtype == ev.evtype || evtype == MidiEvType::ANYTHING)
+			&& ch.match(ev.ch.get()) && v1.match(ev.v1.get())
+			&& v2.match(ev.v2.get());
 }
 
 void MidiEvent::init(const vector<string>& vect, bool isOut) {
@@ -134,24 +141,24 @@ void MidiEvent::init(const vector<string>& vect, bool isOut) {
 		throw string(__func__) + "  Event type is incorrect: [" + vect[0] + "]";
 
 	string delim = isOut ? "+" : ":";
-	chan.init(vect[1], delim);
-	val1.init(vect[2], delim);
-	val2.init(vect[3], delim);
+	ch.init(vect[1], delim);
+	v1.init(vect[2], delim);
+	v2.init(vect[3], delim);
 }
 
 //===================================================
 
 bool MidiEventRule::isSafe() const {
-	// out channel changes - we may miss note off event
+// out channel changes - we may miss note off event
 	if (outEvent.evtype != MidiEvType::NOTE
 			&& outEvent.evtype != MidiEvType::ANYTHING)
 		return true;
 
-	if (outEvent.chan.countborders() == 0)
+	if (outEvent.ch.countborders() == 0)
 		return true;
 
-	if (outEvent.chan.countborders() == 1 && inEvent.val1.countborders() == 0
-			&& inEvent.val2.countborders() == 0)
+	if (outEvent.ch.countborders() == 1 && inEvent.v1.countborders() == 0
+			&& inEvent.v2.countborders() == 0)
 		return true;
 
 	return false;
