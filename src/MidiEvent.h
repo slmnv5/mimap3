@@ -34,11 +34,11 @@ public:
 	}
 	void init(UCHAR a) {
 		lower = a;
-		upper = ZERO;
+		upper = NONE;
 	}
 	void init() {
-		lower = NONE1;
-		upper = ZERO;
+		lower = NONE;
+		upper = NONE;
 	}
 	const UCHAR& get() const {
 		return lower;
@@ -46,14 +46,13 @@ public:
 	UCHAR& get() {
 		return lower;
 	}
-
 	void init(const string&, const string&);
 	int countborders() const;
 	bool match(int) const;
 	bool isNone() const {
-		return lower >= NONE1;
+		return lower == NONE;
 	}
-	void transform(const TripleVal&, UCHAR&) const;
+	void transform(const TripleVal&, ValueRange&) const;
 
 	const string toString() const {
 		stringstream ss;
@@ -61,31 +60,30 @@ public:
 		return ss.str();
 	}
 private:
-	static UCHAR const NONE1 = 128;
-	static UCHAR const ZERO = 0;
+	static UCHAR const NONE = 128;
+	//static UCHAR const ZERO = 0;
 
 	UCHAR lower;
 	UCHAR upper;
 
 	int convertToInt(const string&);
-	string description;
 	char delimiter = ':';
 };
 
 class TripleVal {
 public:
-	void init(UCHAR a, UCHAR b, UCHAR c) {
+	virtual void init(const UCHAR& a, const UCHAR& b, const UCHAR& c) {
 		ch.init(a);
 		v1.init(b);
 		v2.init(c);
 	}
-	void init(UCHAR a, UCHAR b) {
+	virtual void init(const UCHAR& a, const UCHAR& b) {
 		ch.init(a);
 		v1.init(b);
 		v2.init();
 	}
 
-	const string toString() const {
+	virtual const string toString() const {
 		stringstream ss;
 		ss << ch.toString() << "," << v1.toString() << "," << v2.toString()
 				<< '\t';
@@ -117,12 +115,12 @@ public:
 	}
 	const string toString() const {
 		stringstream ss;
-		ss << static_cast<char>(evtype) << "," << toString();
+		ss << static_cast<char>(evtype) << "," << TripleVal::toString();
 		return ss.str();
 	}
 
-	void init(const vector<string>&, bool);
-	void transform(TripleVal&, MidiEvType&) const;
+	virtual void parse(const string&, bool);
+	void transform(MidiEvent&) const;
 	bool match(const MidiEvent&) const;
 
 	MidiEvType evtype = MidiEvType::NONE;
@@ -147,11 +145,6 @@ public:
 				<< outEvent.toString();
 		return ss.str();
 	}
-	void init(vector<string> part1, vector<string> part2) {
-		inEvent.init(part1, false);
-		outEvent.init(part2, true);
-	}
-
 	bool isSafe() const;
 	bool getTermiante() const {
 		return terminate;
@@ -163,7 +156,6 @@ public:
 		return inEvent;
 	}
 
-protected:
 	bool terminate = false;
 	MidiEvent inEvent;
 	MidiEvent outEvent;

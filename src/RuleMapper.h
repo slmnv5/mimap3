@@ -24,6 +24,8 @@ public:
 	int getVerbose() const {
 		return verbose;
 	}
+	void parseRuleString(string&);
+
 protected:
 	int verbose;
 	vector<MidiEventRule>& getRules() {
@@ -34,7 +36,7 @@ private:
 	vector<MidiEventRule> rules;
 
 	static bool preProcessString(string&);
-	void parseRuleString(string&);
+
 };
 
 #endif //RULEMAPPER_H

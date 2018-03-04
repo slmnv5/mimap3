@@ -10,14 +10,14 @@ bool AlsaMapper::sendMappedMidiEvent(snd_seq_event_t* event) {
 	MidiEvent ev;
 
 	readMidiEvent(event, ev);
-	bool changed = rmp.applyRules(ev, tp);
+	bool changed = rmp.applyRules(ev);
 	if (!changed)
 		return true; // pass as is
 
 	if (changed && tp == MidiEvType::NONE)
 		return false; // drop event
 
-	writeMidiEvent(event, ev, tp);
+	writeMidiEvent(event, ev);
 	if (rmp.getVerbose() > 1)
 		cout << "Will send mapped event: " << static_cast<char>(tp)
 				<< ev.toString();
@@ -30,7 +30,7 @@ void AlsaMapper::writeMidiEvent(snd_seq_event_t* event, const MidiEvent& ev) {
 	event->data.note.note = ev.get(1);
 	event->data.note.velocity = ev.get(2);
 
-	switch (tp) {
+	switch (ev.evtype) {
 	case MidiEvType::NOTE:
 		event->type = SND_SEQ_EVENT_NOTEON;
 		break;
@@ -63,7 +63,6 @@ void AlsaMapper::readMidiEvent(snd_seq_event_t* event, MidiEvent& ev) const {
 	case SND_SEQ_EVENT_PGMCHANGE:
 		ev.evtype = MidiEvType::PROGCHANGE;
 		ev.init(event->data.control.channel, event->data.control.value);
-
 		break;
 
 	case SND_SEQ_EVENT_CONTROLLER:

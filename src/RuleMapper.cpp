@@ -16,30 +16,22 @@ bool RuleMapper::preProcessString(string& str) {
 }
 
 void RuleMapper::parseRuleString(string& str) {
-	bool term = preProcessString(str);
+	bool terminating = preProcessString(str);
 
 	if (str.size() == 0)
 		return;
 	vector<string> twoParts;
+
 	splitString(str, "=", twoParts);
 	if (twoParts.size() != 2) {
 		throw string(__func__) + "  Rule must have 2 parts separated by '=': "
 				+ str;
 	}
 
-	vector<string> part1, part2;
-	splitString(twoParts[0], ",", part1);
-	splitString(twoParts[1], ",", part2);
+	MidiEventRule oneRule(terminating);
+	oneRule.inEvent.parse(twoParts[0], false);
+	oneRule.outEvent.parse(twoParts[1], true);
 
-	if (verbose > 1)
-		cout << string(__func__) << "  " << str << " tokens= " << part1.size()
-				<< "/" << part2.size() << endl;
-
-	if (part1.size() != 4 || part2.size() != 4)
-		throw string(__func__) + "  Rule parts must have 4 elements: " + str;
-
-	MidiEventRule oneRule(term);
-	oneRule.init(part1, part2);
 	if (!oneRule.isSafe())
 		throw string(__func__)
 				+ "  Rule is unsafe! Note on/off event may get to different channels: "
@@ -86,20 +78,18 @@ bool RuleMapper::applyRules(MidiEvent& ev) {
 			continue;
 
 		if (verbose > 1)
-			cout << "Found match for: " << static_cast<char>(tp)
-					<< val.toString() << ", in rule: " << oneRule.toString()
-					<< endl;
+			cout << "Found match for: " << ev.toString() << ", in rule: "
+					<< oneRule.toString() << endl;
 
-		outEvent.transform(val, tp);
-		changed=true;
-		if (tp == MidiEvType::SETFLAG) {
-			int newPos = findMatchingRule(val, tp);
+		outEvent.transform(ev);
+		changed = true;
+		if (ev.evtype == MidiEvType::SETFLAG) {
+			int newPos = findMatchingRule(ev);
 			flagPosition = newPos < 0 ? flagPosition : newPos;
 			if (verbose > 1) {
 				string message = newPos < 0 ? "Not found" : "Found";
-				cout << message << " flag for: " << static_cast<char>(tp)
-						<< val.toString() << ", in rule: " << oneRule.toString()
-						<< endl;
+				cout << message << " flag for: " << ev.toString()
+						<< ", in rule: " << oneRule.toString() << endl;
 			}
 		}
 		if (oneRule.getTermiante())

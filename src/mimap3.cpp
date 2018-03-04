@@ -4,12 +4,17 @@
 #include "MidiEvent.h"
 #include "RuleMapper.h"
 #include "MidiFilter.h"
+#include "tests.h"
 
 using namespace std;
 
 void help();
 
 int main(int argc, char* argv[]) {
+
+	test1();
+	exit(0);
+
 	char* ruleFile = nullptr;
 	int verbose = false;
 	for (int i = 1; i < argc; i++) {
