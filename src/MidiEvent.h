@@ -55,13 +55,17 @@ public:
 	void transform(const TripleVal&, ValueRange&) const;
 
 	const string toString() const {
+		if (lower == NONE)
+			return "";
 		stringstream ss;
-		ss << lower << delimiter << upper;
+		ss << lower;
+		if (upper != NONE)
+			ss << delimiter << upper;
 		return ss.str();
 	}
 private:
 	static UCHAR const NONE = 128;
-	//static UCHAR const ZERO = 0;
+
 
 	UCHAR lower;
 	UCHAR upper;
@@ -83,7 +87,7 @@ public:
 		v2.init();
 	}
 
-	virtual const string toString() const {
+	const string toString() const {
 		stringstream ss;
 		ss << ch.toString() << "," << v1.toString() << "," << v2.toString()
 				<< '\t';

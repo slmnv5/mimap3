@@ -12,9 +12,12 @@ void test1() {
 		string ss1("n,,,>c,1+2,,");
 		rmp.parseRuleString(ss1);
 		MidiEvent ev1;
+		cout << rmp.toString() << endl;
 		ev1.parse("n,2,22,10", true);
-		MidiEvent ev = rmp.findMatchingRule(ev1, 0);
-		cout << ev.toString() << endl;
+		cout << ev1.toString() << endl;
+		int k = rmp.findMatchingRule(ev1, 0);
+
+		cout << "found at: " << k << endl;
 
 	} catch (string err) {
 		cout << err << endl;
