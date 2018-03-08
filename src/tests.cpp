@@ -9,11 +9,16 @@ void test1() {
 	int verbose = 2;
 	RuleMapper rmp(verbose);
 	try {
-		string ss1("n,,,>c,1+2,,");
+		string ss1("n,5,,>c,1+2,,");
 		rmp.parseRuleString(ss1);
+		string ss2("n,,10:50,>c,1+3,,");
+		rmp.parseRuleString(ss2);
+		string ss3("c,,20:50,>n,,,");
+		rmp.parseRuleString(ss3);
+
 		MidiEvent ev1;
 		cout << rmp.toString() << endl;
-		ev1.parse("n,2,22,10", true);
+		ev1.parse("c,2,30,10", true);
 		cout << ev1.toString() << endl;
 		int k = rmp.findMatchingRule(ev1, 0);
 

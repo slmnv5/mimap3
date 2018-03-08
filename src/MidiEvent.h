@@ -58,9 +58,9 @@ public:
 		if (lower == NONE)
 			return "";
 		stringstream ss;
-		ss << lower;
+		ss << static_cast<int>(lower);
 		if (upper != NONE)
-			ss << delimiter << upper;
+			ss << delimiter << static_cast<int>(upper);
 		return ss.str();
 	}
 private:
@@ -76,12 +76,12 @@ private:
 
 class TripleVal {
 public:
-	virtual void init(const UCHAR& a, const UCHAR& b, const UCHAR& c) {
+	void init(const UCHAR& a, const UCHAR& b, const UCHAR& c) {
 		ch.init(a);
 		v1.init(b);
 		v2.init(c);
 	}
-	virtual void init(const UCHAR& a, const UCHAR& b) {
+	void init(const UCHAR& a, const UCHAR& b) {
 		ch.init(a);
 		v1.init(b);
 		v2.init();
@@ -123,7 +123,7 @@ public:
 		return ss.str();
 	}
 
-	virtual void parse(const string&, bool);
+	void parse(const string&, bool);
 	void transform(MidiEvent&) const;
 	bool match(const MidiEvent&) const;
 
