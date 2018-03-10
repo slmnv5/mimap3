@@ -12,7 +12,7 @@ void help();
 
 int main(int argc, char* argv[]) {
 
-	test1();
+	test2();
 	exit(0);
 
 	char* ruleFile = nullptr;
