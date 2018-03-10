@@ -101,7 +101,7 @@ bool RuleMapper::applyRules(MidiEvent& ev) {
 const string RuleMapper::toString() const {
 	stringstream ss;
 	for (size_t i = 0; i < getSize(); i++) {
-		ss << endl << "#" << i << '\t' << (rules[i]).toString() << endl;
+		ss << "#" << i << '\t' << (rules[i]).toString() << endl;
 	}
 	return ss.str();
 }

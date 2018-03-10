@@ -29,14 +29,13 @@ int replaceAll(string& line, const string& del, const string& repl) {
 }
 
 int ValueRange::convertToInt(const string& str) {
-	int sz = str.size();
-	if (sz == 0)
-		return NONE;
-	bool onlyDigits = str.find_first_not_of("-+0123456789") == string::npos;
-	if (!onlyDigits)
+	char *end;
+	long i = strtol(str.c_str(), &end, 10);
+	if (*end == '\0')
+		return i;
+	else
 		throw string(__func__) + "  Not correct integer value: [" + str + "]";
 
-	return stoi(str);
 }
 
 void ValueRange::init(const string& str, const string& delim) {
@@ -56,9 +55,9 @@ void ValueRange::init(const string& str, const string& delim) {
 }
 
 int ValueRange::countborders() const {
-	if (isNone())
+	if (isNone(lower))
 		return 0;
-	else if (upper == NONE)
+	else if (isNone(upper))
 		return 1;
 	return 2;
 }
@@ -66,6 +65,8 @@ bool ValueRange::match(int val) const {
 	if (delimiter != ':')
 		throw string(__func__) + "  match cannot be done for this range: "
 				+ this->toString();
+	if (isNone(val))
+		return true;
 	if (countborders() == 0)
 		return true;
 	else if (countborders() == 1)
@@ -115,8 +116,8 @@ bool MidiEvent::match(const MidiEvent& ev) const {
 	if (isOutEvent)
 		throw string(__func__) + "  Out event can not match MidiMessage";
 	return (evtype == ev.evtype || evtype == MidiEvType::ANYTHING)
-			&& ch.match(ev.ch.get()) && v1.match(ev.v1.get())
-			&& v2.match(ev.v2.get());
+
+	&& ch.match(ev.ch.get()) && v1.match(ev.v1.get()) && v2.match(ev.v2.get());
 }
 
 void MidiEvent::parse(const string& str, bool isOut) {
@@ -136,7 +137,8 @@ void MidiEvent::parse(const string& str, bool isOut) {
 			|| evtype == MidiEvType::PROGCHANGE || evtype == MidiEvType::SETFLAG
 			|| evtype == MidiEvType::NONE);
 	if (!ok)
-		throw string(__func__) + "  Event type is incorrect: [" + parts[0] + "]";
+		throw string(__func__) + "  Event type is incorrect: [" + parts[0]
+				+ "]";
 
 	string delim = isOut ? "+" : ":";
 	ch.init(parts[1], delim);

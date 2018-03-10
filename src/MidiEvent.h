@@ -34,11 +34,11 @@ public:
 	}
 	void init(UCHAR a) {
 		lower = a;
-		upper = NONE;
+		upper = 128;
 	}
 	void init() {
-		lower = NONE;
-		upper = NONE;
+		lower = 128;
+		upper = 128;
 	}
 	const UCHAR& get() const {
 		return lower;
@@ -49,24 +49,21 @@ public:
 	void init(const string&, const string&);
 	int countborders() const;
 	bool match(int) const;
-	bool isNone() const {
-		return lower == NONE;
+	static bool isNone(const int& val) {
+		return val == 128;
 	}
 	void transform(const TripleVal&, ValueRange&) const;
 
 	const string toString() const {
-		if (lower == NONE)
+		if (isNone(lower))
 			return "";
 		stringstream ss;
 		ss << static_cast<int>(lower);
-		if (upper != NONE)
+		if (!isNone(upper))
 			ss << delimiter << static_cast<int>(upper);
 		return ss.str();
 	}
 private:
-	static UCHAR const NONE = 128;
-
-
 	UCHAR lower;
 	UCHAR upper;
 
