@@ -25,6 +25,14 @@ class TripleVal;
 //=============================================================
 class ValueRange {
 public:
+// ==== staic =====
+	static UCHAR inline getNone() {
+		return 128;
+	}
+	static bool inline isNone(const int& val) {
+		return val == getNone();
+	}
+// ==== ctor =====
 	ValueRange() {
 		init();
 	}
@@ -34,11 +42,11 @@ public:
 	}
 	void init(UCHAR a) {
 		lower = a;
-		upper = 128;
+		upper = getNone();
 	}
 	void init() {
-		lower = 128;
-		upper = 128;
+		lower = getNone();
+		upper = getNone();
 	}
 	const UCHAR& get() const {
 		return lower;
@@ -49,9 +57,6 @@ public:
 	void init(const string&, const string&);
 	int countborders() const;
 	bool match(int) const;
-	static bool isNone(const int& val) {
-		return val == 128;
-	}
 	void transform(const TripleVal&, ValueRange&) const;
 
 	const string toString() const {

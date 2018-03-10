@@ -29,6 +29,9 @@ int replaceAll(string& line, const string& del, const string& repl) {
 }
 
 int ValueRange::convertToInt(const string& str) {
+	if (str.size() == 0)
+		return getNone();
+
 	char *end;
 	long i = strtol(str.c_str(), &end, 10);
 	if (*end == '\0')
